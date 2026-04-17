@@ -1,4 +1,6 @@
-export const API_BASE_URL = 'http://localhost:8000';
+export const API_BASE_URL = import.meta.env.MODE === 'production' 
+  ? '/api' 
+  : 'http://localhost:8000';
 
 export const SLIDER_CONFIG = {
   stress_level:            { min: 1,    max: 10,   step: 1,    label: 'Stress Level',            tooltip: 'Your overall perceived stress while gaming (1=calm, 10=overwhelming)',           section: 'mental' },

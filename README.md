@@ -55,7 +55,6 @@ npm run dev
 ## 📁 Directory & File Breakdown
 
 ### 🧠 `ml/` (Machine Learning Core)
-*   `gaming_mental_health_10M_40features.csv`: The raw dataset used for training (10M rows).
 *   `train_models.py`: The main pipeline script. It handles data cleaning, feature engineering (labels rage-quits based on aggression/stress), and trains two models.
 *   `rage_model.pkl` & `addiction_model.pkl`: The saved brain of the AI (Random Forest and Gradient Boosting models).
 *   `rage_features.json` & `addiction_features.json`: Metadata defining exactly which features each model needs.
@@ -96,6 +95,31 @@ We don't just predict data; we define behavioral archetypes:
 | **Mental State** | Anxiety, Stress, Loneliness, Happiness |
 | **Physical** | Sleep Hours, Aggression Index |
 | **Social** | Social Interaction Score, Toxic Exposure |
+
+---
+
+---
+
+## 🚀 Deployment to Vercel
+
+The project is structured to be deployed as a monolithic monorepo on Vercel.
+
+### 1. Prerequisites
+- A Vercel account.
+- Your code pushed to a GitHub repository.
+
+### 2. Deployment Steps
+1.  **Import Project**: Go to [Vercel](https://vercel.com/new) and import your repository.
+2.  **Configuration**:
+    -   **Framework Preset**: Select `Vite`.
+    -   **Build Command**: `npm run build`
+    -   **Output Directory**: `frontend/dist`
+3.  **Deploy**: Click **Deploy**.
+
+### 3. How it Works
+-   **Frontend**: Built as a static Vite app.
+-   **Backend**: The `api/index.py` file serves as a Serverless Function for FastAPI.
+-   **Routing**: Requests to `/api/*` go to the Python backend; others go to React.
 
 ---
 
