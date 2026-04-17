@@ -1,7 +1,6 @@
 fastapi
 uvicorn
-scikit-learn
+onnxruntime-cpu
 numpy
-joblib
 pydantic
 python-multipart

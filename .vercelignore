@@ -11,6 +11,11 @@ env
 ml/*.csv
 ml/*.log
 ml/train_models.py
+ml/convert_models.py
+ml/convert_to_onnx.py
+ml/test_onnx.py
+ml/rage_model_gen.py
+ml/*.pkl
 
 # Project docs
 *.md

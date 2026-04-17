@@ -7,7 +7,7 @@ Must be run from backend/ directory OR with correct relative paths to ml/
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-import joblib
+import onnxruntime as rt
 import json
 import numpy as np
 import os
@@ -23,28 +23,33 @@ ML_DIR = BACKEND_DIR.parent / "ml"
 # ─────────────────────────────────────────────
 # LOAD MODELS ON STARTUP
 # ─────────────────────────────────────────────
-print("Loading models...")
+print("Loading ONNX models...")
 
 try:
-    rage_model = joblib.load(ML_DIR / "rage_model.pkl")
-    addiction_model = joblib.load(ML_DIR / "addiction_model.pkl")
-    label_encoder = joblib.load(ML_DIR / "addiction_label_encoder.pkl")
+    # Use CPU provider for serverless compatibility
+    sess_rage = rt.InferenceSession(str(ML_DIR / "rage_model.onnx"), providers=['CPUExecutionProvider'])
+    sess_add = rt.InferenceSession(str(ML_DIR / "addiction_model.onnx"), providers=['CPUExecutionProvider'])
+    
+    # Label encoder was saved as joblib, but we can just use a hardcoded list 
+    # since we know the categories from train_models.py (Low: 1, Medium: 2, High: 0 usually? No, let's check le.classes_)
+    # From train_models log: Label encoding: {'High': 0, 'Low': 1, 'Medium': 2}
+    # Wait, the log showed: 'High': 0, 'Low': 1, 'Medium': 2
+    # So we can use a simple list: [ "High", "Low", "Medium" ]
+    ADDICTION_CLASSES = ["High", "Low", "Medium"]
     
     with open(ML_DIR / "rage_features.json") as f:
         RAGE_FEATURES = json.load(f)
     with open(ML_DIR / "addiction_features.json") as f:
         ADDICTION_FEATURES = json.load(f)
     
-    print("SUCCESS: All models loaded successfully")
-    print(f"  Rage features: {RAGE_FEATURES}")
-    print(f"  Addiction features: {ADDICTION_FEATURES}")
+    print("SUCCESS: All ONNX models loaded successfully")
     MODELS_LOADED = True
 except Exception as e:
     print(f"ERROR: Model loading failed: {e}")
-    print("  Server will start but /predict will return 503")
     MODELS_LOADED = False
-    rage_model = addiction_model = label_encoder = None
+    sess_rage = sess_add = None
     RAGE_FEATURES = ADDICTION_FEATURES = []
+    ADDICTION_CLASSES = []
 
 # ─────────────────────────────────────────────
 # COACHING LOGIC
@@ -161,19 +166,24 @@ def predict(player: PlayerInput):
         )
     
     try:
-        # Build rage feature vector (2D numpy array)
+        # Build rage feature vector (2D numpy array, float32 for ONNX)
         rage_input = np.array([[
-            getattr(player, feat) for feat in RAGE_FEATURES
-        ]])
+            float(getattr(player, feat)) for feat in RAGE_FEATURES
+        ]], dtype=np.float32)
         
-        # Build addiction feature vector (2D numpy array)
+        # Build addiction feature vector
         addiction_input = np.array([[
-            getattr(player, feat) for feat in ADDICTION_FEATURES
-        ]])
+            float(getattr(player, feat)) for feat in ADDICTION_FEATURES
+        ]], dtype=np.float32)
         
         # Rage prediction
-        rage_prob = float(rage_model.predict_proba(rage_input)[0][1])
-        rage_pred = bool(rage_model.predict(rage_input)[0])
+        input_name = sess_rage.get_inputs()[0].name
+        # Outputs: [label, probabilities_dict]
+        res_rage = sess_rage.run(None, {input_name: rage_input})
+        
+        # res_rage[1] is a list of dicts: [{0: p0, 1: p1}]
+        rage_prob = float(res_rage[1][0][1])
+        rage_pred = bool(res_rage[0][0])
         
         # Risk level text
         if rage_prob < 0.40:
@@ -184,12 +194,17 @@ def predict(player: PlayerInput):
             rage_risk_level = "HIGH"
         
         # Addiction prediction
-        add_encoded = addiction_model.predict(addiction_input)[0]
-        add_probs_raw = addiction_model.predict_proba(addiction_input)[0]
-        add_category = label_encoder.inverse_transform([add_encoded])[0]
+        input_name_add = sess_add.get_inputs()[0].name
+        res_add = sess_add.run(None, {input_name_add: addiction_input})
+        
+        # res_add[0] is [label_index], res_add[1] is [{0: p0, 1: p1, 2: p2}]
+        add_idx = int(res_add[0][0])
+        add_probs_raw = res_add[1][0]
+        
+        add_category = ADDICTION_CLASSES[add_idx]
         add_probs = {
-            cls: float(prob)
-            for cls, prob in zip(label_encoder.classes_, add_probs_raw)
+            ADDICTION_CLASSES[i]: float(add_probs_raw[i])
+            for i in range(len(ADDICTION_CLASSES))
         }
         
         # Coaching tips

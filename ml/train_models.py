@@ -158,12 +158,13 @@ X_train_a, X_test_a, y_train_a, y_test_a = train_test_split(
     X_add, y_add, test_size=0.2, random_state=RANDOM_STATE, stratify=y_add
 )
 
-addiction_model = GradientBoostingClassifier(
+addiction_model = RandomForestClassifier(
     n_estimators=100,
-    max_depth=5,
-    learning_rate=0.1,
-    subsample=0.8,
-    random_state=RANDOM_STATE
+    max_depth=15,
+    min_samples_leaf=5,
+    n_jobs=-1,
+    random_state=RANDOM_STATE,
+    class_weight='balanced'
 )
 
 addiction_model.fit(X_train_a, y_train_a)
