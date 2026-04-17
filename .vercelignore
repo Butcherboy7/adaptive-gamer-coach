@@ -1,8 +1,17 @@
-# Ignore local dependencies and large datasets
+# Ignore ONLY heavy dependencies and local envs
 **/node_modules
-ml/*.csv
+**/__pycache__
+**/*.pyc
 .git
+.vercel
 venv
 env
-*.pyc
-__pycache__
+
+# Keep source files (for build) but exclude large data
+ml/*.csv
+ml/*.log
+ml/train_models.py
+
+# Project docs
+*.md
+docs/

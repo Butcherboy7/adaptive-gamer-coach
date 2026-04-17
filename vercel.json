@@ -1,16 +1,17 @@
 {
   "version": 2,
+  "experimentalServices": {
+    "frontend": {
+      "routePrefix": "/"
+    },
+    "backend": {
+      "routePrefix": "/api"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api/index.py"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/$1"
     }
-  ],
-  "env": {
-    "PYTHONPATH": "."
-  }
+  ]
 }
