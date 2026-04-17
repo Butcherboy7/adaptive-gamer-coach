@@ -235,40 +235,52 @@ If models fail to load, the server still starts but returns 503 on `/predict` wi
 
 ---
 
-## 10. PHASE 2: RIOT API BRANCH
+## 10. PHASE 2: RIOT API Hurdles & Decision
+**Status:** Scaffolding complete, logic tested, but **Live Integration Halted**.
 
-**Branch name:** `riot-api`
+**The Obstacle:** 
+During development, we discovered that Riot Games has strict permission tiers for API keys.
+1. **LoL/TFT:** Match history is accessible with a standard Personal Development Key.
+2. **Valorant:** Match history is **blocked** (403 Forbidden) for Development Keys. It requires a formal "Production App" application and an approval process that takes weeks.
 
-**Goal:** Allow users to enter their Riot ID (e.g. `PlayerName#NA1`) → backend fetches last 20 Valorant matches → auto-populates the gaming behavior fields → user manually fills in the mental health fields → runs prediction.
-
-**What Riot API can auto-fill:**
-- `daily_gaming_hours` — from match duration sum
-- `weekly_sessions` — from match count in 7-day window
-- `night_gaming_ratio` — from match start timestamps
-- Surrender proxy → used to show "Rage Signal Detected" warning in UI
-
-**What always requires self-report (Riot API cannot access):**
-- `stress_level`, `anxiety_score`, `sleep_hours`
-- `depression_score`, `loneliness_score`, `happiness_score`
-- `social_interaction_score`, `toxic_exposure`
-
-**OAuth not required:** Player public match data is accessible with a dev API key by PUUID lookup. RSO OAuth is only needed for private/authenticated data.
-
-**Rate limiting strategy:** Dev key = 20 req/sec. Fetching 10 matches per player = 12 API calls. With `asyncio.sleep(0.1)` between calls = ~1.2 seconds total. Well within limits.
-
-**See:** `backend/riot_stub.py` for the fully scaffolded async code.
+**The Decision:**
+To ensure a stable, honest project for Review-3, we decided not to "spoof" or mock the data. Instead, we have kept the architecture in a separate branch (`riot-api`) but reverted the `main` branch to a high-fidelity manual-entry dashboard. This prevents "403 Forbidden" errors during a live demo and demonstrates professional awareness of API permission models.
 
 ---
 
-## 11. REPOSITORY LINKS
+## 11. DEPLOYMENT & SIZE OPTIMIZATION (Vercel)
+
+**Goal:** Zero-setup, one-click cloud deployment.
+
+**Decision 1: Removing Pandas (~100MB saved)**
+Vercel has a 500MB limit for serverless functions. With `scikit-learn`, `scipy`, `numpy`, and `pandas`, the bundle reached 502MB. 
+- *The Fix:* We removed the `pandas` dependency entirely from the inference engine. We now use pure `numpy` to feed the model. This brought the bundle down to ~270MB.
+
+**Decision 2: The .vercelignore Strategy**
+Vercel bundles the entire root directory into the Lambda function. With `frontend/node_modules` (~200MB+), the build failed.
+- *The Fix:* Added `.vercelignore` to exclude local `node_modules` and raw source code from the Python bundle, while still allowing them to be used during the Static Build phase. Final Lambda size: ~15MB.
+
+**Decision 3: Serverless Bridge (`api/index.py`)**
+Vercel expects Python functions in an `api/` folder. Since our FastAPI app was in `backend/`, we created a root bridge to allow Vercel to treat the entire repo as a monolithic deployment.
+
+---
+
+## 12. PROJECT STATUS: FINALIZED MVP (main)
 
 - **GitHub:** https://github.com/Butcherboy7/adaptive-gamer-coach
-- **Main branch:** Production MVP
-- **riot-api branch:** Phase 2 Riot API integration (in development)
+- **Live URL:** (If deployed on Vercel)
+- **Data Integrity:** The 170MB CSV is removed from the repo to keep it lightweight. The pre-trained models are included, making the project portable and immediately runnable.
 
-## 12. HOW TO RUN
+## 13. HOW TO RUN
 
-See `README.md` for the full setup guide.
-**Short version:** Clone → `pip install -r backend/requirements.txt` → `cd backend && python -m uvicorn main:app --port 8000` → `cd frontend && npm install && npm run dev`
+**Local Run:**
+1. Clone → `npm run install` (in root)
+2. Terminal 1: `cd backend && python -m uvicorn main:app --port 8000`
+3. Terminal 2: `cd frontend && npm run dev`
+
+**Cloud Deploy:**
+1. Push to GitHub.
+2. Import to Vercel.
+3. Use Build Command: `npm run build` and Output Directory: `frontend/dist`.
 
 Models are pre-included in the repo (rage_model.pkl, addiction_model.pkl). No training step required for fresh clone.
