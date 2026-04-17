@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 import joblib
 import json
 import numpy as np
-import pandas as pd
 import os
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -162,15 +161,15 @@ def predict(player: PlayerInput):
         )
     
     try:
-        # Build rage feature vector
-        rage_input = pd.DataFrame([{
-            feat: getattr(player, feat) for feat in RAGE_FEATURES
-        }])
+        # Build rage feature vector (2D numpy array)
+        rage_input = np.array([[
+            getattr(player, feat) for feat in RAGE_FEATURES
+        ]])
         
-        # Build addiction feature vector
-        addiction_input = pd.DataFrame([{
-            feat: getattr(player, feat) for feat in ADDICTION_FEATURES
-        }])
+        # Build addiction feature vector (2D numpy array)
+        addiction_input = np.array([[
+            getattr(player, feat) for feat in ADDICTION_FEATURES
+        ]])
         
         # Rage prediction
         rage_prob = float(rage_model.predict_proba(rage_input)[0][1])
