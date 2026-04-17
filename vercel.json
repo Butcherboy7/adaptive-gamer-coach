@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/*.py": {
-      "excludeFiles": "frontend/**"
+      "includeFiles": "{backend/**,ml/*.onnx,ml/*_features.json}"
     }
   },
   "rewrites": [
