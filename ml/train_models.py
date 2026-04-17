@@ -64,10 +64,16 @@ print(f"  Addiction distribution:\n{df['addiction_category'].value_counts()}")
 # ─────────────────────────────────────────────
 # 3. FEATURE DEFINITIONS
 # ─────────────────────────────────────────────
+# NOTE ON LABEL INTEGRITY:
+# rage_quit label = (aggression_score > 6.0) AND (stress_level >= 7)
+# aggression_score is intentionally EXCLUDED from features below.
+# Including it would be a tautology — the model would just learn the threshold
+# we wrote, not a real correlation. Instead, the model must infer rage risk
+# from 8 independent behavioral proxy signals. stress_level is kept because
+# it is a self-reported general state, not a direct label component.
 RAGE_FEATURES = [
     'stress_level', 'anxiety_score', 'daily_gaming_hours', 'toxic_exposure',
-    'night_gaming_ratio', 'weekly_sessions', 'sleep_hours', 'aggression_score',
-    'loneliness_score'
+    'night_gaming_ratio', 'weekly_sessions', 'sleep_hours', 'loneliness_score'
 ]
 
 ADDICTION_FEATURES = [
@@ -186,8 +192,8 @@ test_input_rage = pd.DataFrame([{
     'night_gaming_ratio': 0.7,
     'weekly_sessions': 25,
     'sleep_hours': 5.0,
-    'aggression_score': 7.5,
     'loneliness_score': 7.0
+    # aggression_score intentionally excluded — not a model feature
 }])
 
 test_input_add = pd.DataFrame([{

@@ -109,7 +109,7 @@ app.add_middleware(
 # REQUEST / RESPONSE MODELS
 # ─────────────────────────────────────────────
 class PlayerInput(BaseModel):
-    # Rage features
+    # Rage features (8 independent behavioral signals — no circular dependency)
     stress_level: float = Field(..., ge=1, le=10, description="Perceived stress level 1-10")
     anxiety_score: float = Field(..., ge=0, le=10, description="Anxiety score 0-10")
     daily_gaming_hours: float = Field(..., ge=0, le=24, description="Average daily gaming hours")
@@ -117,7 +117,6 @@ class PlayerInput(BaseModel):
     night_gaming_ratio: float = Field(..., ge=0, le=1, description="Proportion of gaming done at night 0-1")
     weekly_sessions: int = Field(..., ge=1, le=50, description="Number of gaming sessions per week")
     sleep_hours: float = Field(..., ge=0, le=16, description="Average sleep hours per night")
-    aggression_score: float = Field(..., ge=0, le=10, description="In-game aggression level 0-10")
     loneliness_score: float = Field(..., ge=0, le=10, description="Loneliness score 0-10")
     # Addiction-only features
     social_interaction_score: float = Field(..., ge=0, le=10, description="Real-world social interaction 0-10")
@@ -125,6 +124,8 @@ class PlayerInput(BaseModel):
     years_gaming: int = Field(..., ge=0, le=40, description="Years of gaming experience")
     happiness_score: float = Field(..., ge=0, le=10, description="General happiness score 0-10")
     depression_score: float = Field(..., ge=0, le=10, description="Depression score 0-10")
+    # Informational only — used in UI but NOT a model feature (label-adjacent)
+    aggression_score: float = Field(default=5.0, ge=0, le=10, description="In-game aggression 0-10 (UI display only)")
 
 class CoachingTip(BaseModel):
     text: str
@@ -195,13 +196,13 @@ def predict(player: PlayerInput):
         # Coaching tips
         tips = get_coaching_tips(rage_pred, add_category)
         
-        # Input summary (for radar chart normalization on frontend)
+        # Input summary for radar chart — normalized, named accurately
         input_summary = {
             "stress_level": player.stress_level,
             "anxiety_score": player.anxiety_score,
             "loneliness_score": player.loneliness_score,
-            "gaming_intensity": min(10, player.daily_gaming_hours / 2.4),  # normalize 24hr → 10
-            "sleep_quality": max(0, 10 - player.sleep_hours),              # invert: less sleep = higher score
+            "gaming_intensity": min(10, player.daily_gaming_hours / 1.2),  # 12h/day = max (10)
+            "sleep_deprivation": max(0, 10 - player.sleep_hours),          # 0h sleep = 10, 10h = 0
             "social_score": player.social_interaction_score,
         }
         
