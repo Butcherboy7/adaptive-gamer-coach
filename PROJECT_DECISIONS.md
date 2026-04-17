@@ -58,18 +58,15 @@ rage_quit = 1 if (aggression_score > 6.0) AND (stress_level >= 7) else 0
 # Positive rate: ~12.3% of training rows
 ```
 
-## Technical Decision: Migration from Scikit-Learn to ONNX Runtime
+## Technical Decision: prioritization of Localhost & Standard ML Libraries
 
 ### Context
-Initial backend implementations used `scikit-learn` for loading `.pkl` model files. While functional locally, this created a dependency on `scipy`, pushing the deployment bundle size to **300MB+**, exceeding Vercel's **250MB limit**.
+While investigating cloud deployment optimization (ONNX), we decided to revert to the standard **Scikit-Learn/Joblib** ecosystem. 
 
-### Decision
-Migrated inference engine from `scikit-learn` to **ONNX Runtime (onnxruntime-cpu)** and converted models to `.onnx` format.
-
-### Rationale & Result Parity
-1. **Zero Loss in Accuracy**: ONNX is a serialized format for the mathematical graphs of the original models. The conversion process preserves every decision tree threshold and weight. **Predictions are bit-for-bit identical** to the original Scikit-Learn models.
-2. **Bundle Optimization**: By removing `scikit-learn` and its heavy `scipy` dependency, we reduced the production environment footprint by **~200MB**, ensuring a successful, stable deployment.
-3. **Optimized Latency**: ONNX Runtime is specialized for inference and offers lower latency for single-row predictions compared to the broader Scikit-Learn library.
+### Rationale
+1. **Developer Experience**: Using `.pkl` and standard `scikit-learn` is more intuitive for students and researchers. It allows for easier retraining and inspection of model objects (feature importances, tree visualization) without complex conversion steps.
+2. **Localhost Optimization**: For this phase of the project, local performance and ease of setup on a standard machine are prioritized over serverless bundle constraints.
+3. **Library Maturity**: Scikit-Learn provides out-of-the-box support for all the algorithms used, ensuring maximum stability in the prediction logic.
 
 ---
 

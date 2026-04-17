@@ -32,23 +32,17 @@ cd ..
 ```
 *Note: Retraining is only necessary if you change the dataset or label logic.*
 
-### 4. Start the Backend API
-In a new terminal window:
-```bash
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --reload --port 8000
-```
-*The API will be available at: http://localhost:8000. Check the docs at `/docs`.*
+### 4. Backend Setup (FastAPI)
+1. Navigate to root: `cd adaptive-gamer-coach`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Running locally: `python backend/main.py`
+   - The server uses **Scikit-Learn** and **Joblib** to load pre-trained models.
+   - **No retraining required**: The models are pre-bundled in `ml/`.
 
-### 5. Start the Frontend Dashboard
-In a another terminal window:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-*Open your browser to: **http://localhost:5173***
+### Frontend Setup (React + Vite)
+1. Navigate to frontend: `cd frontend`
+2. Install dependencies: `npm install`
+3. Start dev server: `npm run dev`
 
 ---
 

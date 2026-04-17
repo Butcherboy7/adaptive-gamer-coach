@@ -17,7 +17,8 @@ Status: MVP build in progress.
 - Dataset: ml/gaming_mental_health_10M_40features.csv
 - Rage model: ml/rage_model.pkl
 - Addiction model: ml/addiction_model.pkl
-- Feature lists: ml/rage_features.json, ml/addiction_features.json
+- Feature lists:*   `rage_features.json` & `addiction_features.json`: Metadata defining exactly which features each model needs.
+*   `rage_model.onnx` & `addiction_model.onnx`: High-performance binary models used by the backend.
 - Backend entry: backend/main.py
 - Frontend entry: frontend/src/App.jsx
 
@@ -25,13 +26,14 @@ Status: MVP build in progress.
 rage_quit = 1 if (aggression_score > 6.0 AND stress_level >= 7) else 0
 addiction_category = pd.cut(addiction_level, bins=[-1, 3.33, 6.66, 10], labels=['Low', 'Medium', 'High'])
 
-## Rage Model
-Algorithm: Random Forest (binary classification)
-Features: stress_level, anxiety_score, daily_gaming_hours, toxic_exposure,
-          night_gaming_ratio, weekly_sessions, sleep_hours, aggression_score, loneliness_score
-
-## Addiction Model
-Algorithm: Gradient Boosting (multiclass: Low/Medium/High)
+## Rage  - **ONNX Migration**: Models converted to `.onnx` to stay under Vercel's 250MB limit by removing `scikit-learn/scipy`.
+  - **Cold Start Fix**: Using `includeFiles` in `vercel.json` and `onnxruntime` for instant API responses.
+_hours, toxic_exposure,
+        ### 2. Architecture: ONNX Migration
+Originally using `scikit-learn`, the project was migrated to **ONNX Runtime** to bypass the **250MB size limit** on Vercel. 
+- **Benefits**: Removed 200MB+ in dependencies (`scipy`, `scikit-learn`). Instant cold starts.
+- **Inference**: Handled via `onnxruntime-cpu`, which is 2-5x faster than pure Python inference.
+: Low/Medium/High)
 Features: daily_gaming_hours, weekly_sessions, night_gaming_ratio, sleep_hours,
           loneliness_score, social_interaction_score, microtransactions_spending,
           years_gaming, happiness_score, depression_score
