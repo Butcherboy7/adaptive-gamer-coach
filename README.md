@@ -1,137 +1,111 @@
 # ⚡ Adaptive Gamer Coaching System
 ### Behavioral Intelligence for Gamers | GRIET DS Department — Review 3
 
-A machine learning system that predicts rage-quit risk and addiction level from gaming behavior,
-with personalized coaching recommendations. Dark cyberpunk gaming dashboard UI.
+A complete Machine Learning ecosystem that predicts **Rage-Quit Risk** and **Gaming Addiction Levels** using behavioral signals. Featuring a high-performance FastAPI backend and a premium Cyberpunk-themed React dashboard.
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start Guide (Local Setup)
 
-### Prerequisites
-- Python 3.9+
-- Node.js 18+
-- Dataset: `gaming_mental_health_10M_40features.csv` in `ml/` folder
+Follow these steps to get the project running on your local machine.
 
-### 1. Train the Models
+### 1. Prerequisites
+- **Python 3.9+** (For the ML models and Backend)
+- **Node.js 18+** (For the Frontend dashboard)
+- **Git** (To clone the repository)
+
+### 2. Clone the Repository
+Open your terminal and run:
 ```bash
-cd ml
-pip install pandas numpy scikit-learn joblib
-python train_models.py
-# Expected: ~3-5 min, produces rage_model.pkl + addiction_model.pkl
+git clone https://github.com/Butcherboy7/adaptive-gamer-coach.git
+cd adaptive-gamer-coach
 ```
 
-### 2. Start Backend
+### 3. Setup ML Models (Run Once)
+The system needs to train the AI models before it can make predictions.
+```bash
+cd ml
+pip install -r ../backend/requirements.txt  # Installs pandas, scikit-learn, etc.
+python train_models.py
+cd ..
+```
+*Note: This will generate `rage_model.pkl` and `addiction_model.pkl`.*
+
+### 4. Start the Backend API
+In a new terminal window:
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-# API docs: http://localhost:8000/docs
+python -m uvicorn main:app --reload --port 8000
 ```
+*The API will be available at: http://localhost:8000. Check the docs at `/docs`.*
 
-### 3. Start Frontend
+### 5. Start the Frontend Dashboard
+In a another terminal window:
 ```bash
 cd frontend
 npm install
 npm run dev
-# App: http://localhost:5173
 ```
+*Open your browser to: **http://localhost:5173***
 
 ---
 
-## 🤖 ML Models
+## 📁 Directory & File Breakdown
 
-| Model | Algorithm | Type | Features | Target |
-|-------|-----------|------|----------|--------|
-| Rage-Quit Predictor | Random Forest | Binary | 9 behavioral signals | rage_quit (0/1) |
-| Addiction Predictor | Gradient Boosting | Multiclass | 10 lifestyle signals | Low / Medium / High |
-| Coaching Engine | Rule-based | N/A | Prediction outputs | Personalized tips |
+### 🧠 `ml/` (Machine Learning Core)
+*   `gaming_mental_health_10M_40features.csv`: The raw dataset used for training (10M rows).
+*   `train_models.py`: The main pipeline script. It handles data cleaning, feature engineering (labels rage-quits based on aggression/stress), and trains two models.
+*   `rage_model.pkl` & `addiction_model.pkl`: The saved brain of the AI (Random Forest and Gradient Boosting models).
+*   `rage_features.json` & `addiction_features.json`: Metadata defining exactly which features each model needs.
+
+### ⚙️ `backend/` (FastAPI Server)
+*   `main.py`: The engine of the system. It hosts the `/predict` endpoint, loads the ML models, and converts raw numbers into human-readable coaching tips.
+*   `riot_stub.py`: (Phase 2 Scaffold) Prepared logic to connect the app directly to live Riot Games (Valorant/LoL) data.
+*   `requirements.txt`: List of all Python libraries needed.
+
+### 🎨 `frontend/` (React Dashboard)
+*   `src/components/`:
+    *   `PlayerForm.jsx`: The input center with interactive sliders and neon badges.
+    *   `RiskGauge.jsx`: Custom SVG animation showing the "Rage Probability".
+    *   `AddictionMeter.jsx`: Visual representation of lifestyle trends using Recharts.
+    *   `StatsRadar.jsx`: A radar chart plotting your behavioral profile (Stress vs Sleep vs Social).
+    *   `CoachingPanel.jsx`: Displays personalized, interactive advice cards.
+*   `src/App.jsx`: The main controller that wires the splash screen, API calls, and layout together.
+*   `tailwind.config.js`: Custom styling configuration for the Cyberpunk theme.
+
+### 📝 Root Files
+*   `README.md`: This guide.
+*   `HANDOFF.md`: Technical context and architecture notes for developers.
+*   `.gitignore`: Prevents temporary files (like `node_modules`) from being pushed to GitHub.
+
+---
+
+## 🤖 How the AI Thinks
 
 ### Label Engineering
-```python
-# Rage-quit: emotional dysregulation proxy
-rage_quit = 1 if (aggression_score > 6.0 AND stress_level >= 7) else 0
-# Expected positive rate: ~20-25%
+We don't just predict data; we define behavioral archetypes:
+- **Rage-Quit (Binary):** Triggered if a player's `aggression_score` is > 6.0 while their `stress_level` is high (>= 7).
+- **Addiction (Multi-class):** Categorized into **Low**, **Medium**, or **High** based on daily hours, sleep deprivation, and spending habits.
 
-# Addiction: holistic gaming dependency level
-addiction_category = pd.cut(addiction_level, bins=[-1, 3.33, 6.66, 10], labels=['Low','Medium','High'])
-```
-
----
-
-## 🎨 UI Features
-- Dark cyberpunk theme (`#0a0a0f` background + neon colors)
-- Glitch text animation on splash screen
-- Animated SVG semicircular gauge for rage risk
-- Recharts AreaChart for 7-day addiction trend
-- Recharts RadarChart for behavioral profile
-- Staggered card animations for coaching tips
-- Live color-changing slider badges
-- Loading overlay with cycling status text
-- Error state banner
-- Mobile responsive layout
+### Feature Mapping
+| Category | Key Signals Tracked |
+| :--- | :--- |
+| **Active Gaming** | Daily Hours, Weekly Sessions, Night Gaming Ratio |
+| **Mental State** | Anxiety, Stress, Loneliness, Happiness |
+| **Physical** | Sleep Hours, Aggression Index |
+| **Social** | Social Interaction Score, Toxic Exposure |
 
 ---
 
-## 📡 API
-
-### `POST /predict`
-**Input:** 14 behavioral/lifestyle float values  
-**Output:** `rage_probability`, `rage_risk_level`, `addiction_category`, `coaching_tips`, `input_summary`
-
-### `GET /health`
-Returns: model load status + feature lists
-
-### `POST /fetch-player` *(Phase 2 stub)*
-Riot API integration — auto-computes features from match history
+## 🗺️ Phase 2 Roadmap
+- **Live Riot API Sync:** Allow players to enter their `Riot ID#Tag` to auto-populate gaming hours and "Surrender" history.
+- **Steam Integration:** Track total library time and session frequency.
+- **Mental Health Chatbot:** An AI-driven companion to help de-escalate stress after a loss streak.
 
 ---
 
-## 🗺️ Phase 2: Riot API Integration
-
-**What Riot API gives us:**
-- `completionState: "Surrendered"` → direct rage-quit signal
-- Match duration → `daily_gaming_hours`
-- Match timestamps → `night_gaming_ratio`
-- Match count → `weekly_sessions`
-
-**What always requires self-report:**
-- `sleep_hours`, `anxiety_score`, `depression_score`, `loneliness_score`
-
-**Architecture:** Player enters Riot ID → backend fetches last 20 matches →
-auto-fills computable fields → player adds mental health fields → `/predict` runs normally
-
----
-
-## 📁 Project Structure
-```
-adaptive-gamer-coach/
-├── ml/
-│   ├── train_models.py          # Full training pipeline
-│   ├── rage_features.json       # Feature list for rage model
-│   └── addiction_features.json  # Feature list for addiction model
-├── backend/
-│   ├── main.py                  # FastAPI app + endpoints
-│   ├── riot_stub.py             # Phase 2 Riot API scaffold
-│   └── requirements.txt
-├── frontend/
-│   └── src/
-│       ├── App.jsx              # Main layout + wiring
-│       ├── constants.js         # Config + slider definitions
-│       └── components/
-│           ├── PlayerForm.jsx   # Slider form
-│           ├── RiskGauge.jsx    # SVG semicircle gauge
-│           ├── AddictionMeter.jsx # Pills + area chart
-│           ├── StatsRadar.jsx   # Recharts radar
-│           └── CoachingPanel.jsx # Staggered tip cards
-├── HANDOFF.md                   # AI session context (read first!)
-└── README.md
-```
-
----
-
-## 🎓 Academic Context
-- **Project:** Adaptive Gamer Coaching System with Rage-Quit and Addiction Prediction
-- **Department:** GRIET Department of Data Science
-- **Type:** SRP/RTRP Project — Review 3
-- **Dataset:** `gaming_mental_health_10M_40features.csv` (1M rows, 39 features)
+## 🎓 Academic Attribution
+Developed for the **GRIET Department of Data Science** (SRP/RTRP Project — Review 3).
+**Project Lead:** Butcherboy7
+**Dataset Source:** Global Gaming Mental Health Survey (Sampled for local performance).
