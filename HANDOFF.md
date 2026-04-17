@@ -66,4 +66,5 @@ See backend/riot_stub.py for scaffolding.
 ## Git Convention
 Commit after every prompt completion.
 Branch: main only.
+Remote: https://github.com/Butcherboy7/adaptive-gamer-coach.git
 ---
