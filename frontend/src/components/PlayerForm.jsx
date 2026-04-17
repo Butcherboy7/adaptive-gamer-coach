@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { SLIDER_CONFIG, SECTIONS, DEFAULT_VALUES } from '../constants';
 
 // ─── Tooltip Component ───
@@ -96,10 +96,20 @@ function SliderInput({ sliderKey, value, onChange }) {
 }
 
 // ─── Main PlayerForm ───
-export default function PlayerForm({ onSubmit, isLoading }) {
+export default function PlayerForm({ onSubmit, isLoading, prefillValues }) {
   const [values, setValues] = useState(DEFAULT_VALUES);
   const [buttonPulse, setButtonPulse] = useState(false);
+  const [prefillFlash, setPrefillFlash] = useState(false);
   const audioRef = useRef(null);
+
+  // When Riot API returns auto-filled values, merge them in with a flash
+  useEffect(() => {
+    if (prefillValues && Object.keys(prefillValues).length > 0) {
+      setValues(prev => ({ ...prev, ...prefillValues }));
+      setPrefillFlash(true);
+      setTimeout(() => setPrefillFlash(false), 1200);
+    }
+  }, [prefillValues]);
 
   const handleChange = (key, val) => {
     setValues(prev => ({ ...prev, [key]: val }));

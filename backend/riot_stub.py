@@ -1,172 +1,219 @@
 """
-PHASE 2 SCAFFOLD — Riot API Integration
-Not active in MVP. Wire into main.py when Phase 2 begins.
+PHASE 2 — Riot API Integration Service
+Branch: riot-api
 
-Riot API Notes:
-- Dev API key: 20 req/sec, 100 req/2min (sufficient for demo)
-- Production key: requires Riot approval + app submission
-- PUUID lookup: no OAuth needed for public data (GET by Riot ID + tag)
-- Full match history: requires PUUID from account lookup
-- RSO (OAuth): only needed if player must authenticate themselves
-  For demo: dev key can fetch any player's public match data by PUUID
+This module is fully wired in this branch.
+Import and call fetch_player_features(riot_id, tag_line) from main.py.
 
-Key finding: completionState == "Surrendered" in match data
-  = direct rage-quit signal (better than any proxy feature in our dataset)
-  Cross-reference: player KDA in surrendered match vs 30-day average
-  → High deaths + surrendered + loss streak = very high confidence rage signal
+Docs:
+  https://developer.riotgames.com/apis
 
-Endpoints we'll use in Phase 2:
-  1. GET /riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}
-     → Returns: puuid, gameName, tagLine
-  2. GET /val/match/v1/matchlists/by-puuid/{puuid}
-     → Returns: list of matchIds (last 20 by default)
-  3. GET /val/match/v1/matches/{matchId}
-     → Returns: full match with completionState, players, rounds
+API Key:
+  Set RIOT_API_KEY in a .env file in the backend/ directory:
+    RIOT_API_KEY=RGAPI-xxxx-xxxx-xxxx-xxxx
 
-Feature mapping from Riot API → our model features:
-  daily_gaming_hours    = sum(gameLengthMillis) per day / 3600000
-  weekly_sessions       = count of matches in last 7 days
-  night_gaming_ratio    = count(matches where startTime.hour >= 22 or < 4) / total
-  stress_level          = derived from loss_streak (3 losses → stress 7, 5+ → stress 9)
-  aggression_score      = deaths_per_round spike index (above personal avg)
-  rage_quit signal      = completionState == "Surrendered" AND kda < avg_kda * 0.5
-
-Features that CANNOT come from Riot API (always self-reported):
-  sleep_hours, anxiety_score, depression_score, loneliness_score,
-  happiness_score, social_interaction_score, toxic_exposure (chat not exposed)
+Rate limits (dev key):
+  20 requests/second, 100 requests/2 minutes
+  This code fetches 12 calls max per player (1 account + 1 matchlist + 10 matches)
+  asyncio.sleep(0.1) keeps us at 10 req/sec — safely under the limit.
 """
 
 import os
+import asyncio
 import httpx
 from typing import Optional, Dict, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 RIOT_API_KEY = os.getenv("RIOT_API_KEY", "")
 RIOT_BASE_AMERICAS = "https://americas.api.riotgames.com"
-RIOT_BASE_NA = "https://na.api.riotgames.com"
 
-HEADERS = {"X-Riot-Token": RIOT_API_KEY}
+def _headers():
+    return {"X-Riot-Token": RIOT_API_KEY}
 
 
-async def get_puuid_by_riot_id(game_name: str, tag_line: str) -> Optional[str]:
-    """Step 1: Convert Riot ID (name#tag) to PUUID."""
+# ─────────────────────────────────────────────
+# STEP 1: Riot ID → PUUID
+# ─────────────────────────────────────────────
+async def get_puuid(game_name: str, tag_line: str) -> str:
+    """Convert Riot ID (name#tag) to PUUID. No OAuth needed for public data."""
     url = f"{RIOT_BASE_AMERICAS}/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}"
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(url, headers=HEADERS)
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(url, headers=_headers())
         resp.raise_for_status()
-        return resp.json().get("puuid")
+        data = resp.json()
+        return data["puuid"]
 
 
-async def get_match_list(puuid: str, count: int = 20) -> List[str]:
-    """Step 2: Get recent match IDs."""
+# ─────────────────────────────────────────────
+# STEP 2: PUUID → Match IDs (Valorant)
+# ─────────────────────────────────────────────
+async def get_match_ids(puuid: str, count: int = 20) -> List[str]:
+    """Get recent Valorant match IDs for a player."""
     url = f"{RIOT_BASE_AMERICAS}/val/match/v1/matchlists/by-puuid/{puuid}"
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(url, headers=HEADERS)
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(url, headers=_headers())
         resp.raise_for_status()
         data = resp.json()
         return [m["matchId"] for m in data.get("history", [])[:count]]
 
 
-async def get_match_details(match_id: str) -> Dict:
-    """Step 3: Get full match details."""
+# ─────────────────────────────────────────────
+# STEP 3: Match ID → Full Match Details
+# ─────────────────────────────────────────────
+async def get_match(match_id: str) -> Dict:
+    """Fetch full match data including completionState, players, rounds."""
     url = f"{RIOT_BASE_AMERICAS}/val/match/v1/matches/{match_id}"
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(url, headers=HEADERS)
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.get(url, headers=_headers())
         resp.raise_for_status()
         return resp.json()
 
 
-def compute_features_from_matches(puuid: str, matches: List[Dict]) -> Dict:
+# ─────────────────────────────────────────────
+# STEP 4: Compute Features from Match History
+# ─────────────────────────────────────────────
+def compute_features(puuid: str, matches: List[Dict]) -> Dict:
     """
-    Compute model-ready features from a list of match detail objects.
-    Returns dict with auto-computable features + flags for self-report fields.
+    Extract model-ready features from match data.
+
+    Auto-computed (no user input needed):
+      - daily_gaming_hours
+      - weekly_sessions
+      - night_gaming_ratio
+
+    Rage signals (informational, shown in UI):
+      - surrender_rate     → proxy for rage-quit events
+      - avg_kda            → performance trend
+
+    Cannot compute from Riot API (must be self-reported):
+      - stress_level, anxiety_score, sleep_hours, loneliness_score,
+        depression_score, happiness_score, social_interaction_score,
+        toxic_exposure, microtransactions_spending, years_gaming
     """
     if not matches:
-        return {}
+        return {"error": "No match data returned"}
 
-    total_duration_ms = 0
-    game_dates = []
+    now = datetime.now(tz=timezone.utc)
+    seven_days_ago = now - timedelta(days=7)
+
+    total_ms = 0
+    sessions_7d = 0
     night_count = 0
-    surrendered_count = 0
+    surrendered = 0
     kda_list = []
+    match_datetimes = []
 
     for match in matches:
-        # Duration
-        duration = match.get("matchInfo", {}).get("gameLengthMillis", 0)
-        total_duration_ms += duration
+        info = match.get("matchInfo", {})
 
-        # Start time
-        start_ms = match.get("matchInfo", {}).get("gameStartMillis", 0)
+        # Duration
+        duration_ms = info.get("gameLengthMillis", 0)
+        total_ms += duration_ms
+
+        # Start timestamp
+        start_ms = info.get("gameStartMillis", 0)
         if start_ms:
             dt = datetime.fromtimestamp(start_ms / 1000, tz=timezone.utc)
-            game_dates.append(dt)
+            match_datetimes.append(dt)
+
+            # Night gaming: 10pm (22) to 4am
             if dt.hour >= 22 or dt.hour < 4:
                 night_count += 1
 
-        # Surrender detection
-        completion = match.get("matchInfo", {}).get("completionState", "")
-        if completion == "Surrendered":
-            surrendered_count += 1
+            # Weekly sessions
+            if dt >= seven_days_ago:
+                sessions_7d += 1
 
-        # KDA for this player
+        # Surrender detection — this is the key rage-quit signal
+        if info.get("completionState") == "Surrendered":
+            surrendered += 1
+
+        # KDA for this player specifically
         for player in match.get("players", []):
             if player.get("puuid") == puuid:
                 stats = player.get("stats", {})
-                kills = stats.get("kills", 0)
-                deaths = max(stats.get("deaths", 1), 1)
-                assists = stats.get("assists", 0)
-                kda_list.append((kills + assists) / deaths)
+                k = stats.get("kills", 0)
+                d = max(stats.get("deaths", 1), 1)
+                a = stats.get("assists", 0)
+                kda_list.append((k + a) / d)
                 break
 
-    # Compute features
-    n_matches = len(matches)
-    avg_daily_hours = (total_duration_ms / 3_600_000) / 7  # assume 7-day window
-    night_ratio = night_count / n_matches if n_matches else 0
-    avg_kda = sum(kda_list) / len(kda_list) if kda_list else 1
+    n = len(matches)
+    total_hours = total_ms / 3_600_000
+    avg_daily_hours = total_hours / 7  # assume window is 7 days
+    night_ratio = night_count / n if n else 0
+    surrender_ratio = surrendered / n if n else 0
+    avg_kda = sum(kda_list) / len(kda_list) if kda_list else 1.0
 
-    # Loss streak proxy for stress (simple: count consecutive losses at end)
-    # Note: would need win/loss per match for this — simplified here
-    surrender_ratio = surrendered_count / n_matches if n_matches else 0
+    # Surrender rate → aggression proxy (informational display only)
+    aggression_proxy = round(min(10.0, surrender_ratio * 20), 1)
+
+    # Rage signal flag: surrendered in more than 30% of recent matches
+    rage_signal_detected = surrender_ratio >= 0.30
 
     return {
-        "auto_computed": {
+        # ── Auto-filled into form sliders ──
+        "auto_filled": {
             "daily_gaming_hours": round(avg_daily_hours, 2),
-            "weekly_sessions": n_matches,  # matches in the fetched window
+            "weekly_sessions": max(1, sessions_7d),
             "night_gaming_ratio": round(night_ratio, 2),
-            "aggression_score": round(min(10, surrender_ratio * 10 * 2), 1),
         },
-        "self_report_required": [
-            "stress_level", "anxiety_score", "sleep_hours",
-            "loneliness_score", "social_interaction_score",
-            "happiness_score", "depression_score", "toxic_exposure",
-        ],
+        # ── Shown as contextual info in UI ──
         "riot_insights": {
-            "total_matches_analyzed": n_matches,
-            "surrendered_matches": surrendered_count,
+            "riot_id": None,          # filled in by caller
+            "total_matches": n,
+            "surrendered_matches": surrendered,
             "surrender_rate": round(surrender_ratio, 2),
             "average_kda": round(avg_kda, 2),
-            "night_gaming_sessions": night_count,
-        }
+            "night_sessions": night_count,
+            "rage_signal_detected": rage_signal_detected,
+            "aggression_proxy": aggression_proxy,
+        },
+        # ── Always requires user self-report ──
+        "self_report_required": [
+            "stress_level", "anxiety_score", "sleep_hours",
+            "loneliness_score", "depression_score", "happiness_score",
+            "social_interaction_score", "toxic_exposure",
+            "microtransactions_spending", "years_gaming"
+        ]
     }
 
 
-# To wire into main.py, add this endpoint:
-"""
-@app.post("/fetch-player")
-async def fetch_player_data(riot_id: str, tag: str):
-    try:
-        puuid = await get_puuid_by_riot_id(riot_id, tag)
-        match_ids = await get_match_list(puuid, count=20)
-        matches = []
-        for mid in match_ids[:10]:  # limit to 10 for rate limit safety
-            try:
-                m = await get_match_details(mid)
-                matches.append(m)
-                await asyncio.sleep(0.1)  # 10 req/sec to stay under limit
-            except Exception:
-                pass
-        features = compute_features_from_matches(puuid, matches)
-        return {"puuid": puuid, "features": features}
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail=str(e))
-"""
+# ─────────────────────────────────────────────
+# MAIN ENTRY POINT — called by /fetch-player endpoint
+# ─────────────────────────────────────────────
+async def fetch_player_features(game_name: str, tag_line: str) -> Dict:
+    """
+    Full pipeline: Riot ID → PUUID → Match IDs → Match Details → Features.
+    Rate-limited to 10 req/sec (asyncio.sleep(0.1) between match fetches).
+
+    Returns dict with auto_filled, riot_insights, and self_report_required.
+    """
+    if not RIOT_API_KEY:
+        raise ValueError("RIOT_API_KEY not set. Add it to backend/.env")
+
+    # 1. Get PUUID
+    puuid = await get_puuid(game_name, tag_line)
+
+    # 2. Get match IDs (last 20)
+    match_ids = await get_match_ids(puuid, count=20)
+
+    # 3. Fetch up to 10 match details (rate limit safe)
+    matches = []
+    for mid in match_ids[:10]:
+        try:
+            m = await get_match(mid)
+            matches.append(m)
+            await asyncio.sleep(0.1)    # 10 req/sec — stays under 20/sec dev limit
+        except httpx.HTTPStatusError:
+            pass    # Skip failed matches, continue with rest
+
+    # 4. Compute features
+    features = compute_features(puuid, matches)
+    features["riot_insights"]["riot_id"] = f"{game_name}#{tag_line}"
+    features["puuid"] = puuid
+
+    return features

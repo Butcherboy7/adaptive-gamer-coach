@@ -14,6 +14,8 @@ import pandas as pd
 import os
 from pathlib import Path
 from typing import Dict, List, Optional
+import httpx
+from riot_stub import fetch_player_features
 
 # ─────────────────────────────────────────────
 # PATH SETUP — handles running from any directory
@@ -220,26 +222,39 @@ def predict(player: PlayerInput):
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 # ─────────────────────────────────────────────
-# PHASE 2 STUB — Riot API (not implemented yet)
+# PHASE 2 — Riot API (live in riot-api branch)
 # ─────────────────────────────────────────────
+class RiotPlayerRequest(BaseModel):
+    riot_id: str = Field(..., description="Player name (before #)")
+    tag_line: str = Field(..., description="Tag (after #), e.g. NA1")
+
 @app.post("/fetch-player")
-def fetch_player_stub(riot_id: str, tag: str):
+async def fetch_player(req: RiotPlayerRequest):
     """
-    PHASE 2 STUB: Will fetch Riot API data and return computed features.
-    Currently returns placeholder data for UI testing.
+    Fetch Valorant match data for a player by Riot ID.
+    Returns auto-computable features + riot insights.
+    Frontend uses this to pre-fill the form sliders.
+    User must still manually enter mental health fields.
     """
-    return {
-        "status": "stub",
-        "message": "Phase 2 Riot API integration not yet implemented",
-        "riot_id": riot_id,
-        "tag": tag,
-        "computed_features": {
-            "daily_gaming_hours": None,
-            "weekly_sessions": None,
-            "night_gaming_ratio": None,
-            "note": "These will be auto-filled from match history in Phase 2"
-        }
-    }
+    try:
+        result = await fetch_player_features(req.riot_id, req.tag_line)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Player '{req.riot_id}#{req.tag_line}' not found on Riot servers."
+            )
+        elif e.response.status_code == 403:
+            raise HTTPException(
+                status_code=403,
+                detail="Riot API key is invalid or expired. Set a valid RIOT_API_KEY in backend/.env"
+            )
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Riot API error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

@@ -5,6 +5,7 @@ import RiskGauge from './components/RiskGauge';
 import AddictionMeter from './components/AddictionMeter';
 import StatsRadar from './components/StatsRadar';
 import CoachingPanel from './components/CoachingPanel';
+import RiotSearch from './components/RiotSearch';
 import { API_BASE_URL } from './constants';
 
 // ─── Splash Screen ───
@@ -170,6 +171,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [prediction, setPrediction] = useState(null);
   const [error, setError] = useState(null);
+  const [riotPrefill, setRiotPrefill] = useState(null);
 
   const handleAnalyze = async (formValues) => {
     setIsLoading(true);
@@ -232,7 +234,15 @@ export default function App() {
           
           {/* ─── LEFT: Form ─── */}
           <aside className="lg:w-[38%] lg:sticky lg:top-6 lg:h-[calc(100vh-7rem)] card overflow-hidden">
-            <PlayerForm onSubmit={handleAnalyze} isLoading={isLoading} />
+            <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+              {/* Phase 2: Riot Autofill */}
+              <RiotSearch onPrefill={setRiotPrefill} />
+              <PlayerForm
+                onSubmit={handleAnalyze}
+                isLoading={isLoading}
+                prefillValues={riotPrefill}
+              />
+            </div>
           </aside>
 
           {/* ─── RIGHT: Results ─── */}
