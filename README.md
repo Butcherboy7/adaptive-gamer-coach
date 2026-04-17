@@ -1,82 +1,74 @@
 # ⚡ Adaptive Gamer Coaching System
-### Behavioral Intelligence for Gamers | GRIET DS Department — Review 3
+### Behavioral Intelligence for Gamers | Review 3 submission
 
-A complete Machine Learning ecosystem that predicts **Rage-Quit Risk** and **Gaming Addiction Levels** using behavioral signals. Featuring a high-performance FastAPI backend and a premium Cyberpunk-themed React dashboard.
+A high-tech dashboard that predicts **Rage-Quit Risk** and **Gaming Addiction** using Artificial Intelligence.
 
 ---
 
-## 🚀 Quick Start Guide (Local Setup)
+## 🚀 Easy Setup Guide (Beginner Friendly)
 
-Follow these steps to get the project running on your local machine.
+To run this project, you need to open **TWO terminal windows** side-by-side.
 
-### 1. Prerequisites
-- **Python 3.9 - 3.12** (For the ML models and Backend)
-- **Node.js 18+** (For the Frontend dashboard)
-- **Git** (To clone the repository)
-
-### 2. Installation & Execution
-
-#### Step 1: Clone the Repository
-Open your terminal and run:
+### 1. Clone the Project
+Open your first terminal and paste this:
 ```bash
 git clone https://github.com/Butcherboy7/adaptive-gamer-coach.git
 cd adaptive-gamer-coach
 ```
 
-#### Step 2: Backend Setup (FastAPI)
-The backend manages the model inference and data processing.
-1. Install Python dependencies:
+---
+
+### 2. Start the Backend (The AI Engine)
+**In Terminal 1**, run these commands:
+
+1. **Install the tools:**
    ```bash
    pip install -r requirements.txt
    ```
-2. Start the FastAPI server:
+2. **Start the server:**
    ```bash
    python backend/main.py
    ```
-   *The server will start on http://localhost:8000. It pre-loads the trained `.pkl` models from the `ml/` folder automatically.*
+*✅ **What to look for:** You should see a message saying `SUCCESS: All models loaded successfully`.*
 
-#### Step 3: Frontend Setup (React + Vite)
-The frontend provides a futuristic dashboard to visualize player data.
-1. Navigate to the frontend directory:
+---
+
+### 3. Start the Frontend (The Visual Dashboard)
+**Open a NEW terminal (Terminal 2)**, go to the project folder, and run:
+
+1. **Enter the frontend folder:**
    ```bash
    cd frontend
    ```
-2. Install dependencies:
+2. **Install the visual tools:**
    ```bash
    npm install
    ```
-3. Start the Vite development server:
+3. **Launch the dashboard:**
    ```bash
    npm run dev
    ```
-   *Open your browser to the URL shown in the terminal (usually http://localhost:5173).*
+*✅ **What to look for:** A link will appear (e.g., http://localhost:5173). **Ctrl + Click** that link to open your dashboard!*
 
 ---
 
-## 🎮 Core Features
+## 🎮 How to use the Dashboard
 
-- **Dual Input Modes**: 
-  - **Manual Input**: Fine-tune your behavioral stats using high-precision sliders.
-  - **Riot ID Search**: Search from a database of over **100+ simulated Valorant pro/casual players** (e.g., TenZ#NA1, Shroud#EUW) to auto-populate the engine.
-- **Real-time Analytics**: High-speed inference using Scikit-Learn.
-- **Dynamic Visuals**: 
-  - **Risk Gauge**: Animated probability meter for rage-quit risk.
-  - **Addiction Meter**: Recharts-powered visualization of gaming habits.
-  - **Stats Radar**: 360-degree plot of your mental, social, and session behavior.
-- **Smart Coaching**: AI-generated tips tailored to your specific behavioral profile.
+1.  **Manual Mode**: Use the sliders to adjust your stats (Stress, Sleep, etc.).
+2.  **Riot Search**: Click the toggle at the top and type a name like `TenZ#NA1` or `Shroud#EUW`. 
+3.  **Analyze**: Hit the big neon **ANALYZE PLAYER** button at the bottom to see your AI-generated coaching tips!
 
 ---
 
-## 📁 Directory Structure
+## 🛠️ It's Not Working? (Quick Fixes)
 
-- `ml/`: Pre-trained models (`.pkl`), feature definitions, and the training pipeline (`train_models.py`).
-- `backend/`: FastAPI server logic (`main.py`) and API cross-origin configurations.
-- `frontend/`: React components, Cyberpunk UI logic, and the 100+ player dummy database.
-- `api/`: Vercel serverless integration logic.
+-   **"Command not found: pip"**: Try typing `pip3` or `python -m pip` instead.
+-   **"Port 8000 is in use"**: This means the server is already running! You can just refresh your browser.
+-   **"Models not loaded"**: If you see an error about missing files, make sure you are in the `adaptive-gamer-coach` root folder.
 
 ---
 
 ## 🎓 Academic Attribution
-Developed for the **GRIET Department of Data Science** (SRP/RTRP Project — Review 3).
-**Project Lead:** Butcherboy7
-**Research Topic:** Predicting Gamer Burnout and Toxicity via Behavioral Modeling.
+**Course**: GRIET Data Science - Review 3  
+**Research**: Predicting Gamer Burnout via Behavioral Modeling  
+**Project Lead**: Butcherboy7  
