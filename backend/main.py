@@ -98,12 +98,7 @@ app = FastAPI(
 # CORS — allow React dev server and production origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -220,6 +215,8 @@ def predict(player: PlayerInput):
             "social_score": player.social_interaction_score,
         }
         
+        print(f"Prediction result: Rage={rage_pred} ({rage_prob:.2f}), Addiction={add_category}")
+
         return PredictionResponse(
             rage_probability=round(rage_prob, 4),
             rage_prediction=rage_pred,
@@ -231,6 +228,9 @@ def predict(player: PlayerInput):
         )
     
     except Exception as e:
+        import traceback
+        print(f"PREDICTION ERROR: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 # ─────────────────────────────────────────────
