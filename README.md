@@ -21,15 +21,16 @@ git clone https://github.com/Butcherboy7/adaptive-gamer-coach.git
 cd adaptive-gamer-coach
 ```
 
-### 3. Setup ML Models (Run Once)
-The system needs to train the AI models before it can make predictions.
+### 3. Setup ML Models (Optional)
+The pre-trained models (`.pkl`) are already included in the repository, so you can skip this step and go straight to the Backend.
+If you wish to re-train the models with your own data:
 ```bash
 cd ml
-pip install -r ../backend/requirements.txt  # Installs pandas, scikit-learn, etc.
+# Place 'gaming_mental_health_10M_40features.csv' in this folder
 python train_models.py
 cd ..
 ```
-*Note: This will generate `rage_model.pkl` and `addiction_model.pkl`.*
+*Note: Retraining is only necessary if you change the dataset or label logic.*
 
 ### 4. Start the Backend API
 In a new terminal window:
