@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pkl
+*.joblib
+.env
+venv/
+env/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+.DS_Store
+*.local
+
+# Data (too large for git)
+ml/*.csv
+ml/*.pkl
+
+# IDE
+.vscode/
+.idea/
+*.swp
