@@ -18,7 +18,10 @@ dist/
 
 # Data (too large for git)
 ml/*.csv
-ml/*.pkl
+# Allow models and metadata
+!ml/*.pkl
+!ml/*.joblib
+!ml/*.json
 
 # IDE
 .vscode/

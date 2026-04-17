@@ -28,6 +28,13 @@ DATASET_PATH = "gaming_mental_health_10M_40features.csv"
 SAMPLE_SIZE = 200_000
 RANDOM_STATE = 42
 
+if not os.path.exists(DATASET_PATH):
+    print(f"\n[ERROR] Dataset '{DATASET_PATH}' not found in ml/ folder.")
+    print("GitHub ignores large CSV files (>100MB).")
+    print("To train models, place the dataset in the ml/ directory.")
+    print("NOTE: Pregenerated models (.pkl) are already included in this repository.")
+    exit(1)
+
 df = pd.read_csv(DATASET_PATH, nrows=None)
 print(f"  Full dataset shape: {df.shape}")
 
