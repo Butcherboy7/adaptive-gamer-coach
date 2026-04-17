@@ -1,11 +1,8 @@
 {
   "version": 2,
-  "experimentalServices": {
-    "frontend": {
-      "routePrefix": "/"
-    },
-    "backend": {
-      "routePrefix": "/api"
+  "functions": {
+    "api/*.py": {
+      "excludeFiles": "frontend/**"
     }
   },
   "rewrites": [
