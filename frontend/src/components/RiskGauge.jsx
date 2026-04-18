@@ -24,11 +24,11 @@ function SemiGauge({ probability, riskLevel }) {
   useEffect(() => {
     let frame;
     let start = null;
-    const duration = 1200;
+    const duration = 1500; // Slower, smoother animation
     const animate = (timestamp) => {
       if (!start) start = timestamp;
       const progress = Math.min((timestamp - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // cubic ease-out
+      const eased = 1 - Math.pow(1 - progress, 4); // Quart ease-out
       setAnimProgress(eased);
       if (progress < 1) frame = requestAnimationFrame(animate);
     };
@@ -40,10 +40,8 @@ function SemiGauge({ probability, riskLevel }) {
   const displayPercent = useCountUp(percent);
   const animatedProb = animProgress * probability;
 
-  // SVG arc math
-  const cx = 120, cy = 110, r = 90;
-  const startAngle = -180;  // left (0%)
-  const endAngle = 0;       // right (100%)
+  // SVG arc math - Refined for better fit
+  const cx = 120, cy = 110, r = 85;
   const totalAngle = 180;
 
   const toRad = (deg) => (deg * Math.PI) / 180;
@@ -52,15 +50,19 @@ function SemiGauge({ probability, riskLevel }) {
     y: cy + r * Math.sin(toRad(deg)),
   });
 
-  // Background arc (full semicircle)
+  // Start is always left (-180deg)
   const bgStart = polarToCart(cx, cy, r, -180);
   const bgEnd   = polarToCart(cx, cy, r, 0);
   const bgPath = `M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 0 1 ${bgEnd.x} ${bgEnd.y}`;
 
-  // Foreground arc (animated)
+  // Foreground arc
   const fgAngle = -180 + (animatedProb * totalAngle);
   const fgEnd = polarToCart(cx, cy, r, fgAngle);
-  const largeArc = animatedProb > 0.5 ? 1 : 0;
+  
+  // CRITICAL FIX: for a 180-degree gauge, the large-arc flag must ALWAYS be 0
+  // because the arc is never > 180 degrees.
+  const largeArc = 0; 
+  
   const fgPath = animatedProb > 0
     ? `M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 ${largeArc} 1 ${fgEnd.x} ${fgEnd.y}`
     : '';
@@ -74,10 +76,9 @@ function SemiGauge({ probability, riskLevel }) {
 
   return (
     <div className="card flex flex-col items-center">
-      <h3 className="font-orbitron text-xs tracking-widest text-[#64748b] mb-3">RAGE-QUIT RISK</h3>
+      <h3 className="font-orbitron text-xs tracking-widest text-[#64748b] mb-4">RAGE-QUIT RISK</h3>
       
-      <svg width="240" height="130" viewBox="0 0 240 130">
-        {/* Gradient def */}
+      <svg width="240" height="140" viewBox="0 0 240 140" className="overflow-visible">
         <defs>
           <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#00ff88" />
@@ -86,41 +87,53 @@ function SemiGauge({ probability, riskLevel }) {
           </linearGradient>
         </defs>
         
-        {/* Zone arcs (background) */}
-        <path d={bgPath} fill="none" stroke="#1e1e2e" strokeWidth="16" strokeLinecap="round" />
+        {/* Background track */}
+        <path d={bgPath} fill="none" stroke="#1e1e2e" strokeWidth="14" strokeLinecap="round" />
         
-        {/* Gradient reference track */}
-        <path d={bgPath} fill="none" stroke="url(#gauge-gradient)" strokeWidth="16"
-          strokeLinecap="round" opacity="0.15" />
+        {/* Subtle gradient guide */}
+        <path d={bgPath} fill="none" stroke="url(#gauge-gradient)" strokeWidth="14"
+          strokeLinecap="round" opacity="0.1" />
         
-        {/* Animated foreground arc */}
+        {/* Active colored arc */}
         {fgPath && (
-          <path d={fgPath} fill="none" stroke={gaugeColor} strokeWidth="16"
+          <path d={fgPath} fill="none" stroke={gaugeColor} strokeWidth="14"
             strokeLinecap="round"
-            style={{ filter: `drop-shadow(0 0 6px ${gaugeColor})` }} />
+            style={{ filter: `drop-shadow(0 0 8px ${gaugeColor})` }}
+            className="transition-all duration-300"
+          />
+        )}
+
+        {/* Indicator dot at the end of the arc */}
+        {fgPath && (
+          <circle 
+            cx={fgEnd.x} cy={fgEnd.y} r="5" 
+            fill="#fff" 
+            style={{ filter: `drop-shadow(0 0 10px ${gaugeColor})` }}
+          />
         )}
         
-        {/* Center percentage */}
-        <text x={cx} y={cy - 10} textAnchor="middle"
-          fill={gaugeColor} fontSize="32" fontWeight="bold" fontFamily="JetBrains Mono"
-          style={{ filter: `drop-shadow(0 0 8px ${gaugeColor})` }}>
+        {/* Center Text */}
+        <text x={cx} y={cy - 5} textAnchor="middle"
+          fill={gaugeColor} fontSize="38" fontWeight="900" fontFamily="JetBrains Mono"
+          style={{ filter: `drop-shadow(0 0 12px ${gaugeColor}aa)` }}>
           {Math.round(displayPercent)}%
         </text>
-        <text x={cx} y={cy + 14} textAnchor="middle"
-          fill="#64748b" fontSize="10" fontFamily="Orbitron" letterSpacing="3">
+        <text x={cx} y={cy + 18} textAnchor="middle"
+          fill="#64748b" fontSize="11" fontFamily="Orbitron" letterSpacing="4" opacity="0.6">
           RAGE RISK
         </text>
         
-        {/* Scale labels */}
-        <text x="20" y="118" fill="#64748b" fontSize="9" fontFamily="Inter">0%</text>
-        <text x="198" y="118" fill="#64748b" fontSize="9" fontFamily="Inter">100%</text>
+        {/* Scale labels - Positioned carefully relative to start/end points */}
+        <text x="30" y="132" textAnchor="middle" fill="#475569" fontSize="10" fontFamily="Orbitron" fontWeight="bold">0%</text>
+        <text x="210" y="132" textAnchor="middle" fill="#475569" fontSize="10" fontFamily="Orbitron" fontWeight="bold">100%</text>
       </svg>
       
-      {/* Risk level indicator */}
-      <div className="flex items-center gap-2 mt-1">
-        <span className={`w-2 h-2 rounded-full ${blinkColors[riskLevel]} animate-pulse`} />
-        <span className="font-orbitron text-sm font-bold tracking-widest"
-          style={{ color: gaugeColor, textShadow: `0 0 8px ${gaugeColor}88` }}>
+      {/* Dynamic Status Pill */}
+      <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-[#1e1e2e] border border-white/5 mt-1 shadow-lg backdrop-blur-sm">
+        <span className={`w-2.5 h-2.5 rounded-full ${blinkColors[riskLevel]} animate-pulse`} 
+          style={{ boxShadow: `0 0 12px ${gaugeColor}` }}/>
+        <span className="font-orbitron text-[11px] font-black tracking-widest"
+          style={{ color: gaugeColor, textShadow: `0 0 10px ${gaugeColor}44` }}>
           {riskLevel} RISK
         </span>
       </div>
@@ -128,10 +141,12 @@ function SemiGauge({ probability, riskLevel }) {
   );
 }
 
+
 export default function RiskGauge({ data }) {
   if (!data) return (
-    <div className="card flex items-center justify-center h-48 text-[#64748b] text-sm">
-      <span>Awaiting analysis...</span>
+    <div className="card flex flex-col items-center justify-center h-48 text-[#64748b] bg-[#1a1a24]/50 border-dashed border-2 border-white/5">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/20 mb-3" />
+      <span className="font-orbitron text-[10px] tracking-widest uppercase">Awaiting Neural Analysis...</span>
     </div>
   );
   return (
@@ -141,3 +156,4 @@ export default function RiskGauge({ data }) {
     />
   );
 }
+
