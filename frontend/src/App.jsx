@@ -253,7 +253,7 @@ export default function App() {
             {/* Footer note */}
             <div className="text-center py-4">
               <p className="text-xs text-[#64748b]">
-                GRIET Department of Data Science · SRP/RTRP Project ·
+                Mallareddy University Department of Data Science · SRP/RTRP Project ·
                 <span className="text-[#7c3aed]"> Behavioral ML Research</span>
               </p>
             </div>

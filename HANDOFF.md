@@ -4,7 +4,7 @@
 
 ## Project
 Adaptive Gamer Coaching System with Rage-Quit and Addiction Prediction.
-Academic: GRIET Department of Data Science, Review 3 demo.
+Academic: Mallareddy University Department of Data Science, Review 3 demo.
 Status: MVP build in progress.
 
 ## Architecture

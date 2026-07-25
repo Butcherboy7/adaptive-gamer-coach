@@ -90,9 +90,9 @@ This project uses pickled machine learning models (`.pkl` files) which are versi
 ---
 
 ## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](file:///c:/Users/malla/Desktop/adaptive%20gamer%20coach/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🎓 Academic Attribution
-- **Course**: GRIET Data Science - Review 3
+- **Course**: Mallareddy University Data Science - Review 3
 - **Research**: Predicting Gamer Burnout via Behavioral Modeling
-- **Project Lead**: Butcherboy7
+- **Project Lead**: Anonymous Research Team
