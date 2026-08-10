@@ -88,6 +88,7 @@ function ModeToggle({ activeMode, onToggle }) {
 function RiotSearch({ onSelectPlayer, selectedPlayer, onEditSliders }) {
   const [query, setQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [customPlayers, setCustomPlayers] = useState({});
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -101,9 +102,10 @@ function RiotSearch({ onSelectPlayer, selectedPlayer, onEditSliders }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Filter existing dummy players
   const filteredPlayers = DUMMY_PLAYERS.filter(p => 
     p.riotId.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 6);
+  ).slice(0, 5);
 
   const getRankColor = (rank) => {
     switch(rank) {
@@ -120,10 +122,71 @@ function RiotSearch({ onSelectPlayer, selectedPlayer, onEditSliders }) {
     }
   };
 
+  // Helper to generate a fake player profile dynamically on the fly if non-preset Riot ID typed
+  const generateDynamicPlayer = (riotId) => {
+    if (customPlayers[riotId.toLowerCase()]) {
+      return customPlayers[riotId.toLowerCase()];
+    }
+
+    // Seeded pseudo-random numbers from Riot ID string
+    let hash = 0;
+    for (let i = 0; i < riotId.length; i++) {
+      hash = riotId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const pseudoRand = (offset) => {
+      const x = Math.sin(hash + offset) * 10000;
+      return x - Math.floor(x);
+    };
+
+    const ranks = ['Gold', 'Platinum', 'Diamond', 'Ascendant', 'Immortal', 'Radiant'];
+    const agents = ['Jett', 'Reyna', 'Omen', 'Sova', 'Killjoy', 'Chamber', 'Fade', 'Iso'];
+    
+    const rank = ranks[Math.floor(pseudoRand(1) * ranks.length)];
+    const agent = agents[Math.floor(pseudoRand(2) * agents.length)];
+    const hours = Math.floor(pseudoRand(3) * 2500) + 300;
+    const winRate = `${Math.floor(pseudoRand(4) * 25) + 45}%`;
+
+    const generatedPreset = {
+      stress_level: Math.floor(pseudoRand(5) * 8) + 2,
+      anxiety_score: Math.round((pseudoRand(6) * 7 + 2) * 10) / 10,
+      aggression_score: Math.round((pseudoRand(7) * 7 + 2) * 10) / 10,
+      loneliness_score: Math.round((pseudoRand(8) * 8 + 1) * 10) / 10,
+      social_interaction_score: Math.round((pseudoRand(9) * 8 + 1) * 10) / 10,
+      happiness_score: Math.round((pseudoRand(10) * 6 + 3) * 10) / 10,
+      depression_score: Math.round((pseudoRand(11) * 6 + 1) * 10) / 10,
+      daily_gaming_hours: Math.round((pseudoRand(12) * 10 + 2) * 2) / 2,
+      weekly_sessions: Math.floor(pseudoRand(13) * 35) + 5,
+      night_gaming_ratio: Math.round((pseudoRand(14) * 0.8 + 0.1) * 100) / 100,
+      sleep_hours: Math.round((pseudoRand(15) * 6 + 4) * 2) / 2,
+      toxic_exposure: Math.round((pseudoRand(16) * 0.8 + 0.1) * 100) / 100,
+      microtransactions_spending: Math.floor(pseudoRand(17) * 250) + 10,
+      years_gaming: Math.floor(pseudoRand(18) * 12) + 1,
+    };
+
+    const newProfile = {
+      riotId,
+      rank,
+      agent,
+      hours,
+      winRate,
+      presetValues: generatedPreset,
+      isGenerated: true,
+    };
+
+    setCustomPlayers(prev => ({ ...prev, [riotId.toLowerCase()]: newProfile }));
+    return newProfile;
+  };
+
   const handleSelect = (player) => {
     setQuery(player.riotId);
     setIsDropdownOpen(false);
     onSelectPlayer(player);
+  };
+
+  const handleCreateAndSelect = () => {
+    if (!query.trim()) return;
+    const profile = generateDynamicPlayer(query.trim());
+    handleSelect(profile);
   };
 
   return (
@@ -139,14 +202,17 @@ function RiotSearch({ onSelectPlayer, selectedPlayer, onEditSliders }) {
               setIsDropdownOpen(true);
             }}
             onFocus={() => setIsDropdownOpen(true)}
-            placeholder="Enter Riot ID (e.g. TenZ#NA1)"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleCreateAndSelect();
+            }}
+            placeholder="Enter Riot ID (e.g. TenZ#NA1 or your name)"
             className="w-full bg-[#12121a] border border-[#00d4ff] rounded-lg py-3 pl-10 pr-4 text-[#00d4ff] font-mono focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/50 shadow-[0_0_10px_#00d4ff44] transition-shadow placeholder:text-[#334155]"
             spellCheck="false"
           />
         </div>
 
         {isDropdownOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-[#12121a] border border-[#334155] rounded-lg shadow-2xl overflow-hidden z-20 max-h-60 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-[#12121a] border border-[#334155] rounded-lg shadow-2xl overflow-hidden z-20 max-h-64 overflow-y-auto">
             {filteredPlayers.length > 0 ? (
               filteredPlayers.map(player => (
                 <div
@@ -167,16 +233,36 @@ function RiotSearch({ onSelectPlayer, selectedPlayer, onEditSliders }) {
                   </div>
                 </div>
               ))
-            ) : (
-              <div className="p-4 text-center text-sm text-[#64748b]">No players found. Try "TenZ#NA1"</div>
+            ) : null}
+
+            {/* Dynamic Generator Option for ANY custom Riot ID */}
+            {query.trim().length > 0 && (
+              <div
+                onClick={handleCreateAndSelect}
+                className="p-3 bg-[#7c3aed]/10 hover:bg-[#7c3aed]/20 border-t border-[#334155] cursor-pointer flex items-center justify-between text-xs text-[#00ff88] font-mono group"
+              >
+                <div className="flex items-center gap-2">
+                  <span>⚡</span>
+                  <span>Generate AI Profile for <strong>"{query}"</strong></span>
+                </div>
+                <span className="font-orbitron text-[10px] text-[#7c3aed] group-hover:text-white transition-colors">
+                  LOAD PROFILE →
+                </span>
+              </div>
             )}
           </div>
         )}
       </div>
 
       {selectedPlayer && (
-        <div className="bg-[#12121a] border-l-4 border-[#00d4ff] rounded-r-lg p-4 shadow-lg animate-in fade-in zoom-in-95 duration-300">
-          <div className="flex justify-between items-center mb-3">
+        <div className="bg-[#12121a] border-l-4 border-[#00d4ff] rounded-r-lg p-4 shadow-lg animate-in fade-in zoom-in-95 duration-300 relative overflow-hidden">
+          {selectedPlayer.isGenerated && (
+            <span className="absolute top-2 right-2 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#7c3aed]/20 text-[#7c3aed] border border-[#7c3aed]/40">
+              AI SYNTHESIZED
+            </span>
+          )}
+
+          <div className="flex justify-between items-center mb-3 pr-16">
             <h3 className="font-orbitron font-bold text-lg text-white">{selectedPlayer.riotId}</h3>
             <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-[#1e1e2e] text-white border border-white/10 flex items-center gap-2`}>
                <span className={`w-2 h-2 rounded-full ${getRankColor(selectedPlayer.rank)}`} />
@@ -201,7 +287,7 @@ function RiotSearch({ onSelectPlayer, selectedPlayer, onEditSliders }) {
 
           <div className="flex justify-between items-end mt-2">
             <p className="text-xs text-[#64748b] leading-tight">
-              Behavioral estimates pre-loaded.<br/>Adjust sliders to refine.
+              Behavioral profile cached.<br/>Adjust sliders to fine-tune.
             </p>
             <button 
               onClick={onEditSliders}
@@ -216,7 +302,6 @@ function RiotSearch({ onSelectPlayer, selectedPlayer, onEditSliders }) {
   );
 }
 
-
 // ─── Main PlayerForm Component ───
 export default function PlayerForm({ onSubmit, isLoading }) {
   const [activeMode, setActiveMode] = useState('manual');
@@ -230,51 +315,36 @@ export default function PlayerForm({ onSubmit, isLoading }) {
 
   const handleSelectPlayer = (player) => {
     setSelectedPlayer(player);
-    
-    // Add small random variations to the preset values to make it feel more "dynamic" 
-    // even if clicking the same player again, while adhering to config bounds 
-    // (Requested feature: make it seem real, generate randomly using the model)
-    // Wait, the prompt says: "keep tthe data showing up in search bar dummy but genrate the outputs randomly using the model and then also cache the usernames mentioned so when retyped you dont genrate again differently ,which shows its dumy,make it seem real,dont remove any other functionality at all"
 
-    // To fulfill this, we'll use a deterministic random function based on the username string
-    // so the same user always gets the same slightly randomized preset values.
-    
     const seededRandom = (seedStr) => {
-        let hash = 0;
-        for (let i = 0; i < seedStr.length; i++) {
-            hash = seedStr.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return () => {
-            const t = hash += 0x6D2B79F5;
-            let a = t ^ t >>> 15;
-            let b = t ^ t >>> 18;
-            let c = a ^ b ^ t;
-            return ((c ^ c >>> 14) >>> 0) / 4294967296;
-        };
+      let hash = 0;
+      for (let i = 0; i < seedStr.length; i++) {
+        hash = seedStr.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return () => {
+        const t = hash += 0x6D2B79F5;
+        let a = t ^ t >>> 15;
+        let b = t ^ t >>> 18;
+        let c = a ^ b ^ t;
+        return ((c ^ c >>> 14) >>> 0) / 4294967296;
+      };
     };
 
     const rng = seededRandom(player.riotId);
-    
     const randomizedValues = { ...player.presetValues };
     
-    // add +/- 10% random noise deterministically
     Object.keys(randomizedValues).forEach(key => {
-        if(SLIDER_CONFIG[key]) {
-            const range = SLIDER_CONFIG[key].max - SLIDER_CONFIG[key].min;
-            const noise = (rng() - 0.5) * 0.2 * range; // +/- 10% of range
-            let newVal = randomizedValues[key] + noise;
-            
-            // Re-apply bounds
-            newVal = Math.max(SLIDER_CONFIG[key].min, Math.min(SLIDER_CONFIG[key].max, newVal));
-            
-            // Re-apply step
-            const inv = 1.0 / SLIDER_CONFIG[key].step;
-            randomizedValues[key] = Math.round(newVal * inv) / inv;
-        }
+      if(SLIDER_CONFIG[key]) {
+        const range = SLIDER_CONFIG[key].max - SLIDER_CONFIG[key].min;
+        const noise = (rng() - 0.5) * 0.1 * range;
+        let newVal = randomizedValues[key] + noise;
+        newVal = Math.max(SLIDER_CONFIG[key].min, Math.min(SLIDER_CONFIG[key].max, newVal));
+        const inv = 1.0 / SLIDER_CONFIG[key].step;
+        randomizedValues[key] = Math.round(newVal * inv) / inv;
+      }
     });
 
     setValues(randomizedValues);
-
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
   };
@@ -284,7 +354,7 @@ export default function PlayerForm({ onSubmit, isLoading }) {
       {/* Toast Notification */}
       {showToast && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-[#00ff88]/10 border border-[#00ff88] text-[#00ff88] px-4 py-1 rounded-full text-xs font-orbitron font-bold tracking-wider shadow-[0_0_15px_#00ff8844] animate-in slide-in-from-top-4 fade-in duration-300">
-          PROFILE LOADED
+          PROFILE CACHED & LOADED
         </div>
       )}
 
@@ -298,60 +368,47 @@ export default function PlayerForm({ onSubmit, isLoading }) {
            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
             {Object.entries(SECTIONS).map(([sectionKey, { label, icon }]) => (
               <div key={sectionKey} className="mb-8 last:mb-0">
-                <h3 className="font-orbitron font-bold text-[#00d4ff] mb-4 flex items-center gap-2 text-sm border-b border-[#1e1e2e] pb-2">
-                  <span>{icon}</span> {label}
-                  <div className="flex-1 h-px bg-gradient-to-r from-[#00d4ff]/20 to-transparent ml-2" />
+                <h3 className="text-xs font-orbitron font-bold text-[#00ff88] tracking-widest uppercase mb-4 flex items-center gap-2 border-b border-[#1e1e2e] pb-2">
+                  <span>{icon}</span>
+                  {label}
                 </h3>
-                
                 {Object.entries(SLIDER_CONFIG)
-                  .filter(([_, config]) => config.section === sectionKey)
-                  .map(([key, config]) => (
+                  .filter(([_, cfg]) => cfg.section === sectionKey)
+                  .map(([id, config]) => (
                     <SliderInput
-                      key={key}
-                      id={key}
+                      key={id}
+                      id={id}
                       config={config}
-                      value={values[key]}
+                      value={values[id]}
                       onChange={handleSliderChange}
                     />
                   ))}
               </div>
             ))}
-           </div>
+          </div>
         ) : (
-           <RiotSearch 
-             selectedPlayer={selectedPlayer} 
-             onSelectPlayer={handleSelectPlayer} 
-             onEditSliders={() => setActiveMode('manual')} 
-           />
+          <RiotSearch
+            onSelectPlayer={handleSelectPlayer}
+            selectedPlayer={selectedPlayer}
+            onEditSliders={() => setActiveMode('manual')}
+          />
         )}
       </div>
 
-      {/* Submit Button (Always Visible Footer) */}
-      <div className="pt-4 border-t border-[#1e1e2e] mt-auto">
+      {/* Sticky Action Button at Bottom */}
+      <div className="pt-4 border-t border-[#1e1e2e] bg-[#12121a]">
         <button
           onClick={() => onSubmit(values)}
           disabled={isLoading}
-          className="w-full relative group overflow-hidden rounded-lg font-orbitron font-bold tracking-widest text-[#0a0a0f] py-4 transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ 
+          className="w-full py-4 rounded-xl font-orbitron font-bold text-sm tracking-widest uppercase text-[#0a0a0f] transition-all duration-300 relative overflow-hidden group shadow-[0_0_20px_#00d4ff66] disabled:opacity-50"
+          style={{
             background: 'linear-gradient(90deg, #00ff88, #00d4ff)',
-            boxShadow: isLoading ? 'none' : '0 0 20px #00ff8844'
           }}
         >
-          {/* Hover glow effect */}
-          <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-          
-          {/* Button content */}
-          {isLoading ? (
-            <span className="flex items-center justify-center gap-3">
-              <svg className="animate-spin h-5 w-5 text-[#0a0a0f]" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              RUNNING MODELS...
-            </span>
-          ) : (
-            "ANALYZE PLAYER"
-          )}
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            {isLoading ? 'ANALYZING NEURAL PATTERNS...' : '⚡ ANALYZE PLAYER'}
+          </span>
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
         </button>
       </div>
     </div>

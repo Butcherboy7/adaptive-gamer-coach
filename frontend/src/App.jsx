@@ -5,6 +5,7 @@ import RiskGauge from './components/RiskGauge';
 import AddictionMeter from './components/AddictionMeter';
 import StatsRadar from './components/StatsRadar';
 import CoachingPanel from './components/CoachingPanel';
+import ExplainableAIPanel from './components/ExplainableAIPanel';
 import { API_BASE_URL } from './constants';
 
 // ─── Splash Screen ───
@@ -84,9 +85,10 @@ function SplashScreen({ onDone }) {
 // ─── Loading Overlay ───
 const LOADING_TEXTS = [
   'Loading behavioral model...',
-  'Analyzing patterns...',
-  'Running predictions...',
-  'Generating insights...',
+  'Analyzing gaming patterns...',
+  'Extracting mental risk factors...',
+  'Running Random Forest & Gradient Boost...',
+  'Generating Explainable AI drivers...',
 ];
 
 function LoadingOverlay() {
@@ -100,98 +102,43 @@ function LoadingOverlay() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col items-center justify-center"
-      style={{ background: 'rgba(10, 10, 15, 0.92)', backdropFilter: 'blur(4px)' }}>
-      {/* Hexagonal loader */}
-      <svg width="80" height="92" viewBox="0 0 80 92" className="mb-6">
-        <polygon
-          points="40,4 76,24 76,68 40,88 4,68 4,24"
-          fill="none"
-          stroke="#00ff88"
-          strokeWidth="2"
-          style={{
-            filter: 'drop-shadow(0 0 8px #00ff88)',
-            animation: 'hex-pulse 1s ease-in-out infinite',
-          }}
-        />
-        <polygon
-          points="40,18 62,30 62,62 40,74 18,62 18,30"
-          fill="none"
-          stroke="#00d4ff"
-          strokeWidth="1.5"
-          style={{
-            filter: 'drop-shadow(0 0 6px #00d4ff)',
-            animation: 'hex-pulse 1s ease-in-out infinite 0.3s',
-          }}
-        />
-        <polygon
-          points="40,32 50,38 50,56 40,62 30,56 30,38"
-          fill="#00ff8822"
-          stroke="#7c3aed"
-          strokeWidth="1"
-          style={{
-            animation: 'hex-pulse 1s ease-in-out infinite 0.6s',
-          }}
-        />
-      </svg>
-      <p className="font-orbitron text-sm tracking-widest"
-        style={{ color: '#00d4ff', textShadow: '0 0 10px #00d4ff88' }}>
+    <div className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-[#0a0a0f]/80 backdrop-blur-md">
+      <div className="relative w-20 h-20 mb-6">
+        <div className="absolute inset-0 rounded-full border-2 border-t-[#00ff88] border-r-transparent border-b-[#00d4ff] border-l-transparent animate-spin" />
+        <div className="absolute inset-2 rounded-full border-2 border-t-[#7c3aed] border-r-transparent border-b-[#ff2d55] border-l-transparent animate-spin"
+          style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
+        <div className="absolute inset-0 flex items-center justify-center font-orbitron text-xs text-[#00ff88]">
+          AI
+        </div>
+      </div>
+      <p className="font-orbitron text-sm text-[#00ff88] tracking-widest animate-pulse">
         {LOADING_TEXTS[textIndex]}
       </p>
     </div>
   );
 }
 
-// ─── Error Banner ───
-function ErrorBanner({ message, onClose }) {
-  return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-lg max-w-lg w-[90%]"
-      style={{
-        background: '#ff2d5522',
-        border: '1px solid #ff2d55',
-        boxShadow: '0 0 20px #ff2d5544',
-      }}>
-      <span className="text-xl">🛑</span>
-      <div className="flex-1">
-        <p className="font-orbitron text-xs text-[#ff2d55] font-bold">API ERROR</p>
-        <p className="text-xs text-[#e2e8f0] mt-0.5">{message}</p>
-      </div>
-      <button onClick={onClose}
-        className="text-[#64748b] hover:text-[#e2e8f0] text-lg leading-none transition-colors">
-        ×
-      </button>
-    </div>
-  );
-}
-
-// ─── Main App ───
+// ─── Main App Component ───
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [prediction, setPrediction] = useState(null);
+  const [lastInputValues, setLastInputValues] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleAnalyze = async (formValues) => {
+  const handleAnalyze = async (values) => {
     setIsLoading(true);
     setError(null);
-
+    setLastInputValues(values);
     try {
-      const response = await axios.post(`${API_BASE_URL}/predict`, formValues, {
-        timeout: 30000,
-      });
+      const response = await axios.post(`${API_BASE_URL}/predict`, values);
       setPrediction(response.data);
     } catch (err) {
-      let msg = 'Unknown error occurred.';
-      if (err.code === 'ERR_NETWORK' || err.code === 'ECONNREFUSED') {
-        msg = 'Cannot reach the backend. Make sure FastAPI is running on localhost:8000.';
-      } else if (err.response?.status === 503) {
-        msg = 'Models not loaded. Run: cd ml && python train_models.py';
-      } else if (err.response?.status === 422) {
-        msg = 'Invalid input values. Check all fields are within expected ranges.';
-      } else if (err.response?.data?.detail) {
-        msg = err.response.data.detail;
-      }
-      setError(msg);
+      console.error('Prediction API Error:', err);
+      setError(
+        err.response?.data?.detail ||
+        'Could not connect to AI server. Make sure Python backend is running on port 8000.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -199,44 +146,66 @@ export default function App() {
 
   return (
     <>
-      {/* Splash screen */}
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
-
-      {/* Loading overlay */}
       {isLoading && <LoadingOverlay />}
 
-      {/* Error banner */}
-      {error && <ErrorBanner message={error} onClose={() => setError(null)} />}
-
-      {/* ─── Main Layout ─── */}
-      <div className="min-h-screen relative" style={{ zIndex: 1 }}>
-        {/* Top bar */}
-        <header className="border-b border-[#1e1e2e] px-6 py-3 flex items-center justify-between"
-          style={{ background: '#12121a' }}>
+      <div className="min-h-screen bg-[#0a0a0f] text-[#e2e8f0] relative overflow-x-hidden font-sans">
+        
+        {/* Top Navbar */}
+        <header className="border-b border-[#1e1e2e] bg-[#12121a]/80 backdrop-blur-md sticky top-0 z-30 px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-xl">⚡</span>
-            <span className="font-orbitron text-sm font-bold tracking-widest"
-              style={{ color: '#00ff88', textShadow: '0 0 8px #00ff8888' }}>
-              ADAPTIVE GAMER COACH
-            </span>
+            <div>
+              <h1 className="font-orbitron font-bold text-sm text-[#00ff88] tracking-wider flex items-center gap-2">
+                ADAPTIVE GAMER COACH
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#7c3aed]/20 text-[#7c3aed] border border-[#7c3aed]/30 font-mono font-normal">
+                  EXPLAINABLE ML v1.0
+                </span>
+              </h1>
+              <p className="text-[11px] text-[#64748b] font-rajdhani tracking-widest hidden sm:block">
+                BEHAVIORAL INTELLIGENCE & NEURAL PREDICTION HUB
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-[#64748b] font-mono">ML v1.0</span>
-            <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse"
-              title="Backend status" />
+
+          <div className="flex items-center gap-4 text-xs font-mono">
+            <div className="hidden md:flex items-center gap-2 text-[#64748b]">
+              <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-ping" />
+              <span className="text-[#00ff88]">FASTAPI</span>
+              <span>:8000</span>
+            </div>
+            <div className="px-2.5 py-1 rounded bg-[#1e1e2e] text-[#00d4ff] border border-[#00d4ff]/30 text-[11px] font-orbitron">
+              ML AGNOSTIC ENGINE
+            </div>
           </div>
         </header>
 
-        {/* Main content */}
-        <main className="flex flex-col lg:flex-row gap-0 lg:gap-4 p-4 lg:p-6 max-w-[1600px] mx-auto">
+        {/* Error Banner */}
+        {error && (
+          <div className="bg-[#ff2d55]/10 border-b border-[#ff2d55] px-6 py-3 text-xs text-[#ff2d55] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span>⚠️</span>
+              <span>{error}</span>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-[#ff2d55] hover:text-white font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Dashboard Grid Layout */}
+        <main className="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* ─── LEFT: Form ─── */}
-          <aside className="lg:w-[38%] lg:sticky lg:top-6 lg:h-[calc(100vh-7rem)] card overflow-hidden">
+          {/* Left Column: Input Form (5 cols on lg) */}
+          <aside className="lg:col-span-5 bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden shadow-2xl flex flex-col h-[calc(100vh-100px)] sticky top-20">
             <PlayerForm onSubmit={handleAnalyze} isLoading={isLoading} />
           </aside>
 
-          {/* ─── RIGHT: Results ─── */}
-          <section className="lg:w-[62%] flex flex-col gap-4">
+          {/* Right Column: Visualization Dashboard (7 cols on lg) */}
+          <section className="lg:col-span-7 space-y-6">
             
             {/* Row 1: RiskGauge + AddictionMeter */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -244,10 +213,13 @@ export default function App() {
               <AddictionMeter data={prediction} />
             </div>
 
-            {/* Row 2: StatsRadar */}
+            {/* Row 2: Explainable AI & Feature Impact Analysis */}
+            <ExplainableAIPanel prediction={prediction} inputValues={lastInputValues} />
+
+            {/* Row 3: StatsRadar */}
             <StatsRadar data={prediction} />
 
-            {/* Row 3: CoachingPanel */}
+            {/* Row 4: CoachingPanel */}
             <CoachingPanel data={prediction} />
 
             {/* Footer note */}
