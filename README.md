@@ -51,7 +51,7 @@ To run this project, you need to open **TWO terminal windows** side-by-side.
 
 ---
 
-## 🛠️ System Architecture & ML Details
+## 🛠️ Deep Learning Architecture & Neural Network Details
 
 ```
                                ┌───────────────────┐
@@ -63,22 +63,24 @@ To run this project, you need to open **TWO terminal windows** side-by-side.
                                ┌───────────────────┐
                                │  FastAPI Backend  │  (Port 8000)
                                └─────────┬─────────┘
-                                         │  Loads
+                                         │  Inference
                                          ▼
                              ┌──────────────────────┐
-                             │    Scikit-Learn      │  (Version 1.5.2)
-                             │   Pickled Models     │
+                             │ Deep Neural Network  │  (Multi-Layer Perceptron)
+                             │   Pickled Models     │  Dense-128 -> ReLU -> Dense-64
                              └──────────────────────┘
 ```
 
-### Models & Feature Engineering
-- **Rage-Quit Predictor (Random Forest Classifier)**:
+### Deep Neural Network (MLP) Specifications & Feature Scaling
+- **Rage-Quit Predictor (Multi-Layer Perceptron Deep Neural Net)**:
+  - **Architecture**: Input Layer (8 features) ➔ Hidden Dense Layer 1 (128 units + ReLU) ➔ Hidden Dense Layer 2 (64 units + ReLU) ➔ Sigmoidal Output Unit.
   - **Ground Truth**: A gamer is flagged as rage-quitting when `stress_level >= 7` and `aggression_score > 6.0`.
   - **Features Used**: `stress_level`, `anxiety_score`, `daily_gaming_hours`, `toxic_exposure`, `night_gaming_ratio`, `weekly_sessions`, `sleep_hours`, `loneliness_score`.
-  - **Note on Integrity**: `aggression_score` is intentionally excluded from the model features to prevent a tautological model, forcing the Random Forest to learn the behavioral proxies of aggression and stress.
-- **Addiction Predictor (Gradient Boosting Classifier)**:
-  - **Ground Truth**: Binned into three categories (`Low`, `Medium`, `High`) based on the survey's `addiction_level`.
+  - **Feature Integrity**: `aggression_score` is intentionally excluded from input tensors to force the Deep Neural Network to learn non-linear behavioral proxies of tilt.
+- **Addiction Predictor (Multi-Class Deep Neural Net)**:
+  - **Architecture**: Input Layer (10 features) ➔ Hidden Dense Layer 1 (128 units + ReLU) ➔ Hidden Dense Layer 2 (64 units + ReLU) ➔ Softmax Output (Low, Medium, High).
   - **Features Used**: `daily_gaming_hours`, `weekly_sessions`, `night_gaming_ratio`, `sleep_hours`, `loneliness_score`, `social_interaction_score`, `microtransactions_spending`, `years_gaming`, `happiness_score`, `depression_score`.
+- **Neural Loss Convergence Graph**: Interactive training loss curves (Adam Optimizer, Cross-Entropy Loss) dynamically rendered in the UI dashboard.
 
 ---
 

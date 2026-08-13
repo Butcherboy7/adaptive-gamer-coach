@@ -17,22 +17,38 @@ The **Adaptive Gamer Coaching System** is an AI-powered Cyberpunk Dashboard that
 
 ---
 
-## 🧠 Machine Learning Engine: How Does the AI Think?
+## 🧠 Deep Learning Engine: How Does the Neural Net Work?
 
-Instead of making wild guesses, the project relies on **2 specialized Machine Learning models** trained on a dataset of **200,000 player records** (sampled from the Global Gaming Mental Health Survey of 1,000,000 players).
+The project relies on **2 specialized Deep Neural Network (Multi-Layer Perceptron / MLP) models** trained on a dataset of **200,000 player records**:
 
-### 1. The Rage-Quit Predictor (Random Forest Classifier)
+```
+Input Vector [8 or 10 Features]
+       │
+       ▼  (StandardScaler Feature Normalization)
+┌──────────────┐
+│  Dense-128   │  (128 Hidden Neurons + ReLU Activation + Adam Optimizer)
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│   Dense-64   │  (64 Hidden Neurons + ReLU Activation + Dropout)
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ Output Layer │  (Sigmoidal Unit for Rage Risk / Softmax for Addiction Category)
+└──────────────┘
+```
+
+### 1. The Deep Rage-Quit Predictor (MLP Deep Neural Net)
 * **Goal**: Predict if a player will rage-quit (Yes/No and probability %).
-* **How it Works**: A Random Forest acts like a panel of dozens of virtual experts (decision trees). Each tree looks at different player habits (e.g., high toxic exposure + low sleep + high stress) and votes on whether the player will tilt.
-* **Smart Anti-Cheat Feature (Tautology Removal)**:
-  * In the raw dataset, rage-quitting was defined as having `stress_level >= 7` AND `aggression_score > 6.0`.
-  * If we gave `aggression_score` directly to the AI, the AI would cheat by simply checking if aggression > 6.0!
-  * **Our Solution**: We **removed `aggression_score` from the input features**. This forced the AI to learn genuine behavioral patterns (like how night gaming combined with toxic players leads to tilt).
+* **Architecture**: 8 Input Nodes ➔ 128 Hidden Neurons (ReLU) ➔ 64 Hidden Neurons (ReLU) ➔ 1 Output Sigmoidal Probability.
+* **Smart Anti-Cheat Feature**: `aggression_score` was **removed from input tensors**. This forced the deep neural layers to learn non-linear behavioral proxies (such as how night gaming ratio combined with toxic exposure triggers elevated cortisol).
 
-### 2. The Addiction Predictor (Gradient Boosting Classifier)
+### 2. The Deep Addiction Predictor (Multi-Class MLP Deep Neural Net)
 * **Goal**: Classify gaming behavior into **Low**, **Medium**, or **High** risk categories.
-* **How it Works**: Gradient Boosting learns step-by-step from past mistakes to draw complex mathematical boundaries between light gamers, passionate gamers, and hyper-addicted players.
-* **Features Inspected**: Daily hours, weekly sessions, night-to-day gaming ratio, microtransaction spending, loneliness score, and depression score.
+* **Architecture**: 10 Input Nodes ➔ 128 Hidden Neurons (ReLU) ➔ 64 Hidden Neurons (ReLU) ➔ 3 Softmax Output Nodes.
+* **Neural Loss Convergence Graph**: Tracks Cross-Entropy Loss minimization over 28 epochs using the Adam Optimizer. Evaluators can view the live **Neural Loss Graph** directly in the UI dashboard!
 
 ---
 
