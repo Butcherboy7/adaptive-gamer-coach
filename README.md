@@ -5,41 +5,66 @@ A high-tech dashboard that predicts **Rage-Quit Risk** and **Gaming Addiction** 
 
 ---
 
-## 🚀 Easy Setup Guide
+## 🚀 How to Run
 
-To run this project, you need to open **TWO terminal windows** side-by-side.
+### What you need
+- **Python 3.10 – 3.13**: check with `python --version`
+- **Node.js 20 or newer**: check with `node --version`
 
-### 1. Start the Backend (The AI Engine)
-**In Terminal 1**, run these commands from the root directory:
+You will run **two terminals**: one for the backend (the AI models) and one for the frontend (the website). Keep both open while you use the app.
 
-1. **Install the dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. **Start the server:**
-   ```bash
-   python backend/main.py
-   ```
-*✅ **What to look for:** You should see a message saying `SUCCESS: All models loaded successfully`.*
+### Step 1: Backend (Terminal 1)
+Open a terminal in the project folder and run these commands, depending on your system:
 
----
+**Windows (PowerShell or CMD)**
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python backend/main.py
+```
 
-### 2. Start the Frontend (The Visual Dashboard)
-**Open a NEW terminal (Terminal 2)**, navigate to the `frontend/` folder, and run:
+**macOS / Linux**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python backend/main.py
+```
 
-1. **Enter the frontend folder:**
-   ```bash
-   cd frontend
-   ```
-2. **Install the visual tools:**
-   ```bash
-   npm install
-   ```
-3. **Launch the dashboard:**
-   ```bash
-   npm run dev
-   ```
-*✅ **What to look for:** A link will appear (e.g., http://localhost:5173). Ctrl + Click that link to open your dashboard!*
+✅ **It's working when** you see `SUCCESS: All Deep Learning MLP models, scalers, and loss histories loaded`. The server runs at http://127.0.0.1:8000.
+
+> If PowerShell blocks `activate`, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, then try again.
+
+### Step 2: Frontend (Terminal 2)
+Open a **second** terminal in the project folder and run:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+✅ **It's working when** a link appears: http://localhost:5173. Open it in your browser.
+
+### Running it again later
+You only need to install things once. After that:
+
+| Terminal 1 (backend) | Terminal 2 (frontend) |
+| :--- | :--- |
+| `.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (macOS/Linux) | `cd frontend` |
+| `python backend/main.py` | `npm run dev` |
+
+To stop either one, press `Ctrl + C` in its terminal.
+
+### Common problems
+| Problem | Fix |
+| :--- | :--- |
+| Website says *"Can't reach the analysis server"* | The backend isn't running. Start Step 1 in its own terminal. |
+| `No module named '_loss'` or a model loading error | Wrong scikit-learn version. Run `pip install -r requirements.txt` inside the activated `.venv`. |
+| `'python' is not recognized` | Install Python from python.org and tick **"Add Python to PATH"**. On macOS/Linux use `python3`. |
+| `npm` is not recognized | Install Node.js (LTS) from nodejs.org, then reopen the terminal. |
+| Port 8000 or 5173 is already in use | Close the other terminal that is already running it, or restart your computer. |
 
 ---
 
@@ -100,10 +125,8 @@ Both models are trained by `ml/train_deep_learning.py` on 22,000 synthetic, popu
 
 ---
 
-## ⚠️ Important Troubleshooting Note
-This project uses pickled machine learning models (`.pkl` files) which are version-sensitive:
-- **`scikit-learn` version is pinned to `1.5.2`**. Installing other versions of scikit-learn (e.g., `1.6+` or `1.9+`) will cause the application to fail to unpickle the estimators with a `No module named '_loss'` error.
-- Always use `pip install -r requirements.txt` to ensure the correct environment setup.
+## ⚠️ Why scikit-learn is pinned
+The models are saved as pickled `.pkl` files, which only load in the scikit-learn version that saved them. That is why `requirements.txt` pins **`scikit-learn==1.5.2`**: newer versions fail with `No module named '_loss'`. The virtual environment in Step 1 keeps this version separate from anything else on your computer.
 
 ---
 
