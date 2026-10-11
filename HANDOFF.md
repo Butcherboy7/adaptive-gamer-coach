@@ -4,7 +4,7 @@
 
 ## Project
 Adaptive Gamer Coaching System with Rage-Quit and Addiction Prediction.
-Academic: Mallareddy University Department of Data Science, Review 3 demo.
+Academic: Mallareddy University, Department of CSE, Review 3 demo.
 Status: MVP build in progress.
 
 ## Architecture
@@ -22,9 +22,10 @@ Status: MVP build in progress.
 - Backend entry: backend/main.py
 - Frontend entry: frontend/src/App.jsx
 
-## Label Engineering (DO NOT CHANGE)
-rage_quit = 1 if (aggression_score > 6.0 AND stress_level >= 7) else 0
-addiction_category = pd.cut(addiction_level, bins=[-1, 3.33, 6.66, 10], labels=['Low', 'Medium', 'High'])
+## Label Engineering
+Current labels live in ml/train_deep_learning.py (risk-function labels over all model inputs).
+The previous rage label (aggression_score > 6.0 AND stress_level >= 7, with aggression not an input)
+left the model reacting only to stress, so it was replaced. See PROJECT_DECISIONS.md section 6.
 
 ## Rage  - **ONNX Migration**: Models converted to `.onnx` to stay under Vercel's 250MB limit by removing `scikit-learn/scipy`.
   - **Cold Start Fix**: Using `includeFiles` in `vercel.json` and `onnxruntime` for instant API responses.

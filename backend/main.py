@@ -12,7 +12,14 @@ import json
 import numpy as np
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
+
+try:
+    from backend.coaching import build_report  # imported as a package (Vercel api/index.py)
+    from backend import players
+except ImportError:
+    from coaching import build_report          # run directly: python backend/main.py
+    import players
 
 # ─────────────────────────────────────────────
 # PATH SETUP
@@ -133,6 +140,8 @@ class PredictionResponse(BaseModel):
     coaching_tips: List[CoachingTip]
     input_summary: Dict[str, float]
     deep_learning_meta: Dict
+    addiction_index: float
+    report: Dict[str, Any]
 
 # ─────────────────────────────────────────────
 # ENDPOINTS
@@ -141,41 +150,73 @@ class PredictionResponse(BaseModel):
 def health_check():
     return {"status": "ok", "models_loaded": MODELS_LOADED, "architecture": "Deep Multi-Layer Perceptron"}
 
+@app.get("/players/search")
+def search_players(q: str = "", limit: int = 8):
+    """Search the Valorant player database by Riot ID (name or name#tag)."""
+    return {"results": players.search(q, min(limit, 20))}
+
+
+@app.get("/players/lookup")
+def lookup_player(riot_id: str):
+    """Full profile for a Riot ID: rank, stats, agents, recent matches and play-time pattern."""
+    if not riot_id.strip():
+        raise HTTPException(status_code=400, detail="Enter a Riot ID like name#tag")
+    return players.lookup(riot_id)
+
+
 @app.post("/predict", response_model=PredictionResponse)
 def predict(player: PlayerInput):
     if not MODELS_LOADED:
         raise HTTPException(status_code=503, detail="Deep Learning models not loaded")
     
     try:
-        # Build raw feature arrays
-        rage_raw = np.array([[getattr(player, feat) for feat in RAGE_FEATURES]])
-        addiction_raw = np.array([[getattr(player, feat) for feat in ADDICTION_FEATURES]])
-        
-        # Scale for Deep Neural Net Tensors
-        rage_input = scaler_rage.transform(rage_raw)
-        addiction_input = scaler_addiction.transform(addiction_raw)
-        
-        # Deep Neural Net Inference for Rage Risk
-        rage_probs = rage_model.predict_proba(rage_input)[0]
-        rage_prob = float(rage_probs[1]) if len(rage_probs) > 1 else float(rage_probs[0])
+        x = player.model_dump()
+
+        def rage_batch(rows: List[Dict[str, float]]) -> np.ndarray:
+            raw = np.array([[r[f] for f in RAGE_FEATURES] for r in rows])
+            return rage_model.predict_proba(scaler_rage.transform(raw))[:, 1]
+
+        def addiction_batch(rows: List[Dict[str, float]]) -> np.ndarray:
+            # Expected severity on a 0-1 scale: Low=0, Medium=0.5, High=1
+            raw = np.array([[r[f] for f in ADDICTION_FEATURES] for r in rows])
+            probs = addiction_model.predict_proba(scaler_addiction.transform(raw))
+            weights = np.array([{"Low": 0.0, "Medium": 0.5, "High": 1.0}[c] for c in label_encoder.classes_])
+            return probs @ weights
+
+        def rage_fn(values: Dict[str, float]) -> float:
+            return float(rage_batch([values])[0])
+
+        def addiction_probs_fn(values: Dict[str, float]) -> Dict[str, float]:
+            raw = np.array([[values[f] for f in ADDICTION_FEATURES]])
+            probs = addiction_model.predict_proba(scaler_addiction.transform(raw))[0]
+            return {cls: float(p) for cls, p in zip(label_encoder.classes_, probs)}
+
+        def addiction_index_fn(values: Dict[str, float]) -> float:
+            return float(addiction_batch([values])[0])
+
+        def addiction_class_fn(values: Dict[str, float]) -> str:
+            p = addiction_probs_fn(values)
+            return max(p, key=p.get)
+
+        rage_prob = rage_fn(x)
         rage_pred = rage_prob >= 0.5
-        
+
         if rage_prob < 0.40:
             rage_risk_level = "LOW"
         elif rage_prob < 0.70:
             rage_risk_level = "MEDIUM"
         else:
             rage_risk_level = "HIGH"
-        
-        # Deep Neural Net Inference for Addiction Level
-        add_encoded = addiction_model.predict(addiction_input)[0]
-        add_probs_raw = addiction_model.predict_proba(addiction_input)[0]
-        add_category = label_encoder.inverse_transform([add_encoded])[0]
-        add_probs = {
-            cls: float(prob)
-            for cls, prob in zip(label_encoder.classes_, add_probs_raw)
-        }
-        
+
+        add_probs = addiction_probs_fn(x)
+        add_category = max(add_probs, key=add_probs.get)
+        add_index = addiction_index_fn(x) * 100
+
+        report = build_report(
+            x, rage_fn, addiction_index_fn, addiction_class_fn, rage_batch, addiction_batch,
+            rage_prob, rage_risk_level, add_category, add_index,
+        )
+
         tips = get_coaching_tips(rage_pred, add_category)
         
         input_summary = {
@@ -195,7 +236,9 @@ def predict(player: PlayerInput):
             addiction_probabilities=add_probs,
             coaching_tips=[CoachingTip(**tip) for tip in tips],
             input_summary={k: round(v, 2) for k, v in input_summary.items()},
-            deep_learning_meta=DL_META
+            deep_learning_meta=DL_META,
+            addiction_index=round(add_index, 1),
+            report=report,
         )
     
     except Exception as e:

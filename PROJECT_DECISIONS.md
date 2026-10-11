@@ -46,7 +46,7 @@ Since "Rage-Quitting" and "Addiction" are subjective, we had to engineer the gro
 
 ## 4. FRONTEND & UX INNOVATIONS
 
-### 100+ Player Dummy Database
+### 100+ Player Database
 - **Decision**: Created a "Riot ID Search" system with a hardcoded database of 100+ players.
 - **Rationale**: To demonstrate how the app would scale with a live database. 
 - **The "Seeded Random" Trick**: We implemented a deterministic randomization hash based on the username. 
@@ -71,3 +71,24 @@ Since "Rage-Quitting" and "Addiction" are subjective, we had to engineer the gro
 | **Frontend** | React (Vite) | Fastest HMR for UI polishing; component-based architecture. |
 | **Styling** | Tailwind CSS | Utility-first approach for custom Cyberpunk design tokens. |
 | **Charts** | Recharts | React-native component API for responsive SVG charts. |
+
+
+---
+
+## 6. ACCURACY & UX REVAMP
+
+### Retrained labels
+- **Problem**: The rage-quit label was `aggression > 6 AND stress >= 7`, but aggression was not a model input and the training features were independent random draws. The network could only learn from stress, so sleep, toxic lobbies and gaming hours had no effect (11h/day, 4.5h sleep and 80% toxic lobbies still scored "LOW").
+- **Decision**: Labels are now sampled from documented risk functions over all of the inputs the dashboard asks about (see `ml/train_deep_learning.py`). Aggression is now an input to the tilt model. Held-out metrics are saved to `ml/deep_learning_meta.json` and shown in the UI.
+
+### Real explanations instead of decorative charts
+- Removed the "7-day risk projection" (sine-wave noise) and the hardcoded "+X% risk" impact numbers.
+- Factor impacts are now Shapley values computed from the models; the "If you follow the plan" projection re-runs the same models on the plan's targets.
+
+### Player database
+- Moved to the backend (`backend/players.py`) as a real search/lookup API.
+- 144 hand-named Riot IDs across six regions. Each profile comes from a behavioural archetype, so rank, K/D, match history, play times and wellbeing answers agree with each other.
+- Removed real professional players' names: attaching invented mental-health scores to real people is not acceptable, even with synthetic data.
+
+### Visual direction
+- Replaced the neon/cyan "cyberpunk HUD" with an esports-broadcast look: graphite plates, a bone-white verdict lower-third, red reserved for risk and actions, Big Shoulders Display + Archivo (self-hosted via Fontsource).

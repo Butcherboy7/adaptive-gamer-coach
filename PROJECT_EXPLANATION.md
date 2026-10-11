@@ -121,6 +121,6 @@ Open `http://localhost:5173` in your browser and experience your AI Gamer Coach!
 
 ## 🎓 Academic Attribution & License
 
-* **Institution**: Mallareddy University Department of Data Science
+* **Institution**: Mallareddy University, Department of CSE
 * **Research Focus**: Predicting Gamer Burnout via Behavioral Modeling
 * **License**: MIT License

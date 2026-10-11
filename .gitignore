@@ -5,6 +5,10 @@ __pycache__/
 *.joblib
 .env
 venv/
+.venv/
+.impeccable/review/
+.impeccable/hook.cache.json
+.impeccable/questions/
 env/
 *.egg-info/
 dist/
