@@ -7,7 +7,6 @@ Loads Deep Neural Network (MLP) models & Scalers for Behavioral Analysis
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-import joblib
 import json
 import numpy as np
 import os
@@ -16,9 +15,10 @@ from typing import Any, Dict, List, Optional
 
 try:
     from backend.coaching import build_report  # imported as a package (Vercel api/index.py)
-    from backend import players
+    from backend import mlp, players
 except ImportError:
     from coaching import build_report          # run directly: python backend/main.py
+    import mlp
     import players
 
 # ─────────────────────────────────────────────
@@ -33,12 +33,10 @@ ML_DIR = BACKEND_DIR.parent / "ml"
 print("Loading Deep Neural Network Models (MLP Architecture)...")
 
 try:
-    rage_model = joblib.load(ML_DIR / "rage_model.pkl")
-    addiction_model = joblib.load(ML_DIR / "addiction_model.pkl")
-    scaler_rage = joblib.load(ML_DIR / "scaler_rage.pkl")
-    scaler_addiction = joblib.load(ML_DIR / "scaler_addiction.pkl")
-    label_encoder = joblib.load(ML_DIR / "addiction_label_encoder.pkl")
-    
+    # Weights exported from the trained scikit-learn models and run with NumPy only,
+    # so the server doesn't need scikit-learn (too large for a Vercel function).
+    rage_model, addiction_model, scaler_rage, scaler_addiction, label_encoder = mlp.load(ML_DIR / "mlp_weights.json")
+
     with open(ML_DIR / "rage_features.json") as f:
         RAGE_FEATURES = json.load(f)
     with open(ML_DIR / "addiction_features.json") as f:

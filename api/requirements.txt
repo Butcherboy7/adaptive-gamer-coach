@@ -1,7 +1,4 @@
-fastapi
-uvicorn
-scikit-learn==1.5.2
-numpy
-joblib
-pydantic
-python-multipart
+fastapi>=0.100.0
+uvicorn>=0.20.0
+numpy>=1.20.0
+pydantic>=2.0

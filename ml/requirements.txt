@@ -1,0 +1,5 @@
+# Only needed to retrain the models (python train_deep_learning.py).
+# The API itself runs on requirements.txt in the project root.
+scikit-learn==1.5.2
+numpy>=1.20.0
+joblib>=1.3.0

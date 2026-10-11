@@ -61,7 +61,7 @@ To stop either one, press `Ctrl + C` in its terminal.
 | Problem | Fix |
 | :--- | :--- |
 | Website says *"Can't reach the analysis server"* | The backend isn't running. Start Step 1 in its own terminal. |
-| `No module named '_loss'` or a model loading error | Wrong scikit-learn version. Run `pip install -r requirements.txt` inside the activated `.venv`. |
+| A model loading error | Make sure `ml/mlp_weights.json` exists. If you retrained, run `python export_weights.py` in `ml/`. |
 | `'python' is not recognized` | Install Python from python.org and tick **"Add Python to PATH"**. On macOS/Linux use `python3`. |
 | `npm` is not recognized | Install Node.js (LTS) from nodejs.org, then reopen the terminal. |
 | Port 8000 or 5173 is already in use | Close the other terminal that is already running it, or restart your computer. |
@@ -107,7 +107,7 @@ To stop either one, press `Ctrl + C` in its terminal.
 ```
 
 ### Models (Multi-Layer Perceptrons, scikit-learn)
-Both models are trained by `ml/train_deep_learning.py` on 22,000 synthetic, population-shaped player profiles (80/20 train/test split). Run `cd ml && python train_deep_learning.py` to retrain.
+Both models are trained by `ml/train_deep_learning.py` on 22,000 synthetic, population-shaped player profiles (80/20 train/test split). See *How the models run* below to retrain.
 
 - **Tilt / rage-quit model**: 9 inputs (stress, anxiety, anger after losses, daily hours, toxic lobbies, late-night play, sessions, sleep, loneliness) → Dense-128 → Dense-64 → probability. Labels are sampled from a documented risk function in the training script, so every input has a real effect. Test accuracy 79.7%, ROC-AUC 0.86 (the noisy labels cap any model at about 79%).
 - **Addiction model**: 10 inputs (daily hours, sessions, late-night play, sleep, loneliness, offline social life, spending, years playing, happiness, low mood) → Dense-128 → Dense-64 → Low / Medium / High. Test accuracy 92.6%, macro-F1 0.91.
@@ -125,8 +125,16 @@ Both models are trained by `ml/train_deep_learning.py` on 22,000 synthetic, popu
 
 ---
 
-## ⚠️ Why scikit-learn is pinned
-The models are saved as pickled `.pkl` files, which only load in the scikit-learn version that saved them. That is why `requirements.txt` pins **`scikit-learn==1.5.2`**: newer versions fail with `No module named '_loss'`. The virtual environment in Step 1 keeps this version separate from anything else on your computer.
+## ⚙️ How the models run
+The models are trained with scikit-learn, then exported to `ml/mlp_weights.json` and run by the API with plain NumPy (`backend/mlp.py`, which gives exactly the same predictions). The server therefore doesn't need scikit-learn, which keeps the Vercel function well under its size limit.
+
+To retrain (optional):
+```bash
+pip install -r ml/requirements.txt
+cd ml
+python train_deep_learning.py
+```
+This uses the pinned `scikit-learn==1.5.2` and re-exports `mlp_weights.json` automatically.
 
 ---
 

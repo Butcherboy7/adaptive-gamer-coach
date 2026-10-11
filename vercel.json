@@ -2,7 +2,8 @@
   "version": 2,
   "functions": {
     "api/*.py": {
-      "excludeFiles": "frontend/**"
+      "includeFiles": "{backend/**,ml/*.json}",
+      "excludeFiles": "{frontend/**,docs/**,.venv/**}"
     }
   },
   "rewrites": [

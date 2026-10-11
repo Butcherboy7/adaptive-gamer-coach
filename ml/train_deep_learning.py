@@ -191,5 +191,8 @@ with open('rage_features.json', 'w') as f:
 with open('addiction_features.json', 'w') as f:
     json.dump(ADDICTION_FEATURES, f)
 
-print("\n[4/4] Saved: rage_model.pkl, addiction_model.pkl, scalers, label encoder, deep_learning_meta.json")
+from export_weights import export
+export()  # NumPy-ready weights the API serves from (no scikit-learn needed at runtime)
+
+print("\n[4/4] Saved: rage_model.pkl, addiction_model.pkl, scalers, label encoder, mlp_weights.json, deep_learning_meta.json")
 print("=" * 70)
