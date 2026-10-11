@@ -5,7 +5,9 @@ async function request(path, options = {}) {
   try {
     res = await fetch(`${API_BASE_URL}${path}`, options);
   } catch {
-    throw new Error("Can't reach the analysis server. Start it with `python backend/main.py` and try again.");
+    throw new Error(import.meta.env.DEV
+      ? "Can't reach the analysis server. Start it with `python backend/main.py` and try again."
+      : "Can't reach the analysis server. Check your connection and try again.");
   }
   if (!res.ok) {
     let detail = `Server error (${res.status})`;
