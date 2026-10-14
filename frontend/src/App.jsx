@@ -211,7 +211,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <span>Mallareddy University · Department of CSE · Built by Abdullah</span>
+        <span>Mallareddy University</span>
         <span>Coaching guidance, not a medical diagnosis.</span>
       </footer>
     </div>
