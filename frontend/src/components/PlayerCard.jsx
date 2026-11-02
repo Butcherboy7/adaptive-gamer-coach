@@ -1,7 +1,7 @@
 import { Flag } from 'lucide-react';
 import { RANK_COLORS, rankLabel } from '../constants';
 import RankMark from './RankMark';
-import { useCountUp, useEnterDelay } from '../motion';
+import { useCountUp } from '../motion';
 
 function Stat({ label, value, decimals = Number.isInteger(value) ? 0 : 1, unit, title, delay }) {
   const shown = useCountUp(value, { decimals, delay, duration: 1200 });
@@ -40,10 +40,9 @@ function HourStrip({ byHour }) {
 export default function PlayerCard({ player }) {
   const { rank, stats } = player;
   const color = RANK_COLORS[rank.rank];
-  const enter = useEnterDelay();
-  const d = enter * 1000 + 250;
+  const d = 100;
   return (
-    <section className="plate player-card" aria-label="Player profile" style={{ '--rank': color, '--enter': `${enter}s` }}>
+    <section className="plate player-card" aria-label="Player profile" style={{ '--rank': color }}>
       <header className="pc-head">
         <RankMark rank={rank.rank} size={52} />
         <div className="pc-id">
@@ -62,11 +61,11 @@ export default function PlayerCard({ player }) {
 
       <dl className="pc-stats">
         <Stat label="K/D" value={stats.kd} decimals={2} delay={d} />
-        <Stat label="HS%" value={stats.hs_pct} unit="%" delay={d + 60} />
-        <Stat label="ACS" value={stats.acs} delay={d + 120} />
-        <Stat label="Win" value={stats.win_rate} unit="%" delay={d + 180} />
-        <Stat label="Games 7d" value={stats.matches_7d} title="Matches in the last 7 days" delay={d + 240} />
-        <Stat label="Hrs 30d" value={stats.hours_30d} title="Hours played in the last 30 days" delay={d + 300} />
+        <Stat label="Headshot" value={stats.hs_pct} unit="%" delay={d} />
+        <Stat label="ACS" value={stats.acs} delay={d} />
+        <Stat label="Win rate" value={stats.win_rate} unit="%" delay={d} />
+        <Stat label="Games, 7 days" value={stats.matches_7d} title="Matches in the last 7 days" delay={d} />
+        <Stat label="Hours, 30 days" value={stats.hours_30d} title="Hours played in the last 30 days" delay={d} />
       </dl>
 
       <div className="pc-agents">

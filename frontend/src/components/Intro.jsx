@@ -26,7 +26,7 @@ export default function Intro() {
           <span className="intro-line"><span>Adaptive Gamer</span></span>
           <span className="intro-line intro-line-b"><span>Coach</span></span>
         </div>
-        <p className="intro-tag">Tilt &amp; addiction intelligence for players</p>
+        <p className="intro-tag">Anger and gaming-habit insights for players</p>
       </div>
       <span className="intro-sweep" />
     </div>

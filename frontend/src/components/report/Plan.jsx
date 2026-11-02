@@ -1,14 +1,14 @@
+import { CalendarCheck, ChevronDown, Sun, Target } from 'lucide-react';
+
+const PHASE_ICON = [Sun, CalendarCheck, Target];
+
 function Taper({ weeks }) {
   const budget = 3;
   const top = Math.ceil(Math.max(...weeks.map((w) => w.hours), budget + 1));
-  // Bars, the budget line and the overshoot all share one plot box, so they agree with the numbers.
   const pct = (v) => `${(v / top) * 100}%`;
   return (
     <figure className="taper">
-      <figcaption>
-        <b>Step-down schedule</b> Daily play cap each week, cutting about 20% a week until you're within the 3-hour budget.
-        Red is time over budget.
-      </figcaption>
+      <figcaption><b>Daily play cap</b> Step down each week to the 3h budget</figcaption>
       <div className="taper-plot" role="img" aria-label={`Daily cap by week: ${weeks.map((w) => `${w.label} ${w.hours} hours`).join(', ')}. Budget 3 hours.`}>
         <span className="taper-budget" style={{ bottom: pct(budget) }}><i>3h budget</i></span>
         {weeks.map((w, i) => (
@@ -31,27 +31,32 @@ function Taper({ weeks }) {
   );
 }
 
+// Titles only; the how-to opens on click.
 export default function Plan({ plan, taper }) {
   return (
     <section className="plate plan" aria-labelledby="plan-title">
       <header className="section-head">
-        <h2 id="plan-title">Your recovery plan</h2>
-        <p>Built from your own numbers. Start with today, and don't try to change everything at once.</p>
+        <h2 id="plan-title">Your plan</h2>
       </header>
       <ol className="plan-phases">
-        {plan.map((phase) => (
-          <li key={phase.phase} className="phase">
-            <h3 className="phase-when">{phase.phase}</h3>
-            <ul>
-              {phase.items.map((it) => (
-                <li key={it.title}>
-                  <b>{it.title}</b>
-                  <span>{it.detail}</span>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
+        {plan.map((phase, pi) => {
+          const Icon = PHASE_ICON[pi] || Target;
+          return (
+            <li key={phase.phase} className="phase">
+              <h3 className="phase-when"><Icon size={17} aria-hidden /> {phase.phase}</h3>
+              <ul>
+                {phase.items.map((it) => (
+                  <li key={it.title}>
+                    <details className="step">
+                      <summary><span className="step-box" aria-hidden /><span>{it.title}</span><ChevronDown size={15} className="step-chev" aria-hidden /></summary>
+                      <p>{it.detail}</p>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          );
+        })}
       </ol>
       {taper.length > 1 && <Taper weeks={taper} />}
     </section>

@@ -1,10 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Search, CornerDownLeft, LoaderCircle } from 'lucide-react';
 import { api } from '../api';
-import { RANK_COLORS, rankLabel } from '../constants';
+import { rankLabel } from '../constants';
 import RankMark from './RankMark';
 
-export default function PlayerSearch({ onSelect, loading }) {
+export default function PlayerSearch({ onSelect, loading, large = false, autoFocus = false }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [results, setResults] = useState([]);
@@ -53,11 +53,12 @@ export default function PlayerSearch({ onSelect, loading }) {
   };
 
   return (
-    <div className="search" ref={boxRef}>
+    <div className={`search ${large ? "search-lg" : ""}`} ref={boxRef}>
       <div className="search-field">
         {loading ? <LoaderCircle className="search-icon spin" size={18} aria-hidden /> : <Search className="search-icon" size={18} aria-hidden />}
         <input
           ref={inputRef}
+          autoFocus={autoFocus}
           type="text"
           role="combobox"
           aria-expanded={open}
@@ -96,7 +97,7 @@ export default function PlayerSearch({ onSelect, loading }) {
                     <span className="riot-tag">#{opt.tag}</span>
                   </span>
                   <span className="search-meta">
-                    <span style={{ color: RANK_COLORS[opt.rank.rank] }}>{rankLabel(opt.rank)}</span>
+                    <span>{rankLabel(opt.rank)}</span>
                     <span>{opt.main_agent}</span>
                     <span>{opt.region}</span>
                   </span>

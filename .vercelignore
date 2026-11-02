@@ -15,3 +15,5 @@ ml/train_models.py
 # Project docs
 *.md
 docs/
+vicky-ref/
+_original-animations/

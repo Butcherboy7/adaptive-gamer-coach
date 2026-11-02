@@ -30,7 +30,7 @@ export default function ModelCard({ meta }) {
       <summary>
         <span className="model-title">How the analysis works <ChevronDown size={18} className="model-chev" aria-hidden /></span>
         <span className="model-sum num">
-          Tilt model AUC {r.roc_auc ?? '—'} · Addiction model accuracy {a.accuracy ? `${Math.round(a.accuracy * 100)}%` : '—'}
+          Anger model AUC {r.roc_auc ?? '—'} · Addiction model accuracy {a.accuracy ? `${Math.round(a.accuracy * 100)}%` : '—'}
         </span>
       </summary>
       <div className="model-body">
@@ -41,14 +41,14 @@ export default function ModelCard({ meta }) {
             {meta.test_samples?.toLocaleString()} held-out ones.
           </p>
           <ul>
-            <li><b>Tilt model:</b> 9 inputs → probability of rage-quitting. Accuracy {Math.round((r.accuracy || 0) * 100)}%, ROC-AUC {r.roc_auc}. Labels are noisy by design, so the best any model could score is {Math.round((r.best_possible_accuracy || 0) * 100)}%.</li>
+            <li><b>Anger model:</b> 9 inputs → probability of rage-quitting. Accuracy {Math.round((r.accuracy || 0) * 100)}%, ROC-AUC {r.roc_auc}. Labels are noisy by design, so the best any model could score is {Math.round((r.best_possible_accuracy || 0) * 100)}%.</li>
             <li><b>Addiction model:</b> 10 inputs → Low / Medium / High. Accuracy {Math.round((a.accuracy || 0) * 100)}%, macro-F1 {a.macro_f1}.</li>
             <li><b>Factor impacts:</b> Shapley values. Each factor's points are its average effect on the model's output when it moves from the healthy baseline to your value, across random orderings of the factors.</li>
             <li><b>Data:</b> {meta.data_source}.</li>
           </ul>
         </div>
         <div className="model-curves">
-          <LossCurve values={meta.rage_loss_history} label="Tilt model" />
+          <LossCurve values={meta.rage_loss_history} label="Anger model" />
           <LossCurve values={meta.addiction_loss_history} label="Addiction model" />
         </div>
       </div>

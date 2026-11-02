@@ -77,7 +77,7 @@ def _hours(v, x):
     return (
         f"You're averaging {v:g} hours a day, about {week} hours a week. Past roughly 3 hours a day, "
         "gaming starts crowding out sleep, study and people, and long sessions wear down focus and patience. "
-        "Tired players tilt faster and find it harder to stop.",
+        "Tired players lose their temper faster and find it harder to stop.",
         [
             f"Cut to {max(2.5, round(v * 0.8 * 2) / 2):g}h a day this week. Set the limit before you launch, not mid-session.",
             "Use a hard stop: a phone alarm on the other side of the room, or Windows Family Safety / console screen-time limits on your own account.",
@@ -102,7 +102,7 @@ def _sessions(v, x):
 def _night(v, x):
     return (
         f"About {round(v * 100)}% of your play happens after 10 PM. Late-night lobbies are tired, more toxic, "
-        "and every game pushes your bedtime back, so you start tomorrow already on tilt.",
+        "and every game pushes your bedtime back, so you start tomorrow already short-tempered.",
         [
             "Set a 'last queue' time of 10:30 PM: no new match after it, whatever the result of the last one.",
             "Switch to unrated or Deathmatch after 10 PM if you play at all. Never chase rank late at night.",
@@ -153,7 +153,7 @@ def _spend(v, x):
 def _stress(v, x):
     return (
         f"Your stress is at {v:g}/10. When you start a match already stressed, a lost round feels personal, "
-        "and that's when tilt and the 'one more game to win it back' loop take over.",
+        "and that's when rage and the 'one more game to win it back' loop take over.",
         [
             "Before each session, do a 60-second check-in: if you're above 6/10, play unrated or don't queue at all.",
             "Between rounds, try box breathing: in for 4, hold for 4, out for 4, hold for 4. It lowers your heart rate fast.",
@@ -176,11 +176,11 @@ def _anxiety(v, x):
 
 def _aggression(v, x):
     return (
-        f"Anger after losses is at {v:g}/10. Strong anger spikes are the clearest sign of tilt, and they "
+        f"Anger after losses is at {v:g}/10. Strong anger spikes are the clearest sign you're about to lose it, and they "
         "predict rage-quits, flaming teammates and smashed peripherals.",
         [
             "Two-loss rule: after 2 losses in a row, stop ranked for at least 30 minutes.",
-            "Name it out loud ('I'm tilted') and stand up from the desk. Labelling the feeling cuts its intensity.",
+            "Name it out loud ('I'm getting angry') and stand up from the desk. Labelling the feeling cuts its intensity.",
             "Review one death per loss in the replay instead of blaming teammates. It turns anger into a fix.",
         ],
     )
@@ -404,7 +404,7 @@ def build_report(
     elif add_category == "High":
         headline, deck = "Gaming is taking over.", "It's taking up more of your life than is healthy."
     elif rage_level == "HIGH":
-        headline, deck = "Tilt is running the show.", "Setbacks knock you off balance more often than you keep control."
+        headline, deck = "Your temper is running the show.", "Setbacks knock you off balance more often than you keep control."
     elif add_category == "Medium" or rage_level == "MEDIUM":
         headline, deck = "You're in the warning zone.", "Small changes now will prevent bigger problems later."
     else:
@@ -412,18 +412,18 @@ def build_report(
 
     if top:
         body = (
-            f"The model puts your tilt (rage-quit) risk at {tilt_pct}% and your addiction level at {add_category.lower()} "
+            f"The model puts your anger risk at {tilt_pct}% and your addiction level at {add_category.lower()} "
             f"({shown(round(add_index, 1))}/100). The biggest {'driver' if len(top) == 1 else 'drivers'} {verb} {top_names}. "
             f"Bringing {those} into the healthy range is where most of your risk comes down. "
         )
     else:
         body = (
-            f"The model puts your tilt (rage-quit) risk at {tilt_pct}% and your addiction level at {add_category.lower()} "
+            f"The model puts your anger risk at {tilt_pct}% and your addiction level at {add_category.lower()} "
             f"({shown(round(add_index, 1))}/100). None of your habits are pushing your risk up meaningfully. "
         )
     if projected["changes"]:
         body += (
-            f"If you follow the plan below, the same model predicts tilt risk drops to "
+            f"If you follow the plan below, the same model predicts anger risk drops to "
             f"{shown(projected['tilt_probability'] * 100)}% and addiction to {projected['addiction_category'].lower()} "
             f"({shown(projected['addiction_index'])}/100)."
         )

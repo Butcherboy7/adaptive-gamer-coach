@@ -20,6 +20,23 @@ export const INPUTS = {
   years_gaming:               { label: 'Years playing',       min: 0, max: 30,  step: 1,    unit: 'y',   source: 'self',  healthy: null,      hint: 'How long you have played regularly' },
 };
 
+// Plain words for the two ends of each slider.
+const WORD_ENDS = {
+  stress_level: ['Calm', 'Overwhelmed'],
+  anxiety_score: ['Relaxed', 'Anxious'],
+  aggression_score: ['Cool', 'Furious'],
+  depression_score: ['Fine', 'Very low'],
+  happiness_score: ['Unhappy', 'Happy'],
+  loneliness_score: ['Connected', 'Isolated'],
+  social_interaction_score: ['Alone', 'Lots of people'],
+  night_gaming_ratio: ['Never', 'Always'],
+  toxic_exposure: ['Never', 'Always'],
+};
+export const INPUT_ENDS = Object.fromEntries(
+  Object.entries(INPUTS).map(([k, c]) => [k, WORD_ENDS[k] || [formatValueLater(k, c.min), formatValueLater(k, c.max)]]),
+);
+function formatValueLater(key, value) { return formatValue(key, value); }
+
 export const INPUT_GROUPS = [
   { id: 'match', title: 'From match history', note: 'Pulled from recent Valorant matches', keys: ['daily_gaming_hours', 'weekly_sessions', 'night_gaming_ratio'] },
   { id: 'habits', title: 'Habits', note: 'From your weekly check-in', keys: ['sleep_hours', 'toxic_exposure', 'microtransactions_spending', 'years_gaming'] },
@@ -35,8 +52,8 @@ export const DEFAULT_VALUES = {
 };
 
 export const RANK_COLORS = {
-  Iron: '#6f7378', Bronze: '#a8754c', Silver: '#b9c0c4', Gold: '#e2b04a', Platinum: '#3fb3b8',
-  Diamond: '#c58cf0', Ascendant: '#3cbf7a', Immortal: '#e0566a', Radiant: '#f6e7a3',
+  Iron: '#6b7076', Bronze: '#94603a', Silver: '#7d8890', Gold: '#b3830a', Platinum: '#1f8f94',
+  Diamond: '#8e4fc4', Ascendant: '#1f8f55', Immortal: '#c23a50', Radiant: '#a8891f',
 };
 
 export function formatValue(key, value) {
@@ -52,4 +69,43 @@ export function formatValue(key, value) {
 export function rankLabel(r) {
   if (!r) return '';
   return r.tier ? `${r.rank} ${r.tier}` : r.rank;
+}
+
+export function statusOf(cfg, v) {
+  if (!cfg.healthy) return 'neutral';
+  const [lo, hi] = cfg.healthy;
+  if (v >= lo && v <= hi) return 'healthy';
+  const gap = v > hi ? v - hi : lo - v;
+  return gap <= 0.15 * (cfg.max - cfg.min) ? 'watch' : 'risk';
+}
+
+// Manual entry asks six questions; these inputs are worked out from them (assumptions of the
+// app, not learned by the model, which was trained on independent inputs), the rest stay typical.
+export const DERIVED_FROM = {
+  weekly_sessions: 'hours you play a day',
+  sleep_hours: 'late-night play',
+  anxiety_score: 'stress',
+  depression_score: 'how happy you feel',
+  social_interaction_score: 'loneliness',
+};
+export const TYPICAL_KEYS = ['toxic_exposure', 'microtransactions_spending', 'years_gaming'];
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const half = (v) => Math.round(v * 2) / 2;
+
+export function deriveValues(a) {
+  return {
+    ...DEFAULT_VALUES,
+    daily_gaming_hours: a.daily_gaming_hours,
+    night_gaming_ratio: a.night_gaming_ratio,
+    stress_level: a.stress_level,
+    aggression_score: a.aggression_score,
+    happiness_score: a.happiness_score,
+    loneliness_score: a.loneliness_score,
+    weekly_sessions: clamp(Math.round((a.daily_gaming_hours * 7) / 1.5), 1, 50),
+    sleep_hours: clamp(half(8.5 - 3.5 * a.night_gaming_ratio), 3, 12),
+    anxiety_score: clamp(half(a.stress_level * 0.9), 0, 10),
+    depression_score: clamp(half((10 - a.happiness_score) * 0.6), 0, 10),
+    social_interaction_score: clamp(half(10 - a.loneliness_score), 0, 10),
+  };
 }

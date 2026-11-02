@@ -1,119 +1,258 @@
-# ⚡ Adaptive Gamer Coaching System
-### Behavioral Intelligence for Gamers | Review 3 Submission
+# Adaptive Gamer Coach
+### Behavioral intelligence for gamers | Review 3 submission
 
-A high-tech dashboard that predicts **Rage-Quit Risk** and **Gaming Addiction** using Machine Learning. This project helps gamers balance their mental well-being with their gaming sessions through data-driven recommendations and cognitive coaching tips.
+A dark, broadcast-style dashboard (with a short Valorant-style intro animation) that uses machine learning to predict a gamer's **anger risk** (how likely they are to lose their temper and rage-quit) and **gaming addiction level**, shows exactly which habits drive each result, and writes a step-by-step recovery plan.
+
+It is **not** a medical tool. It gives coaching guidance, not a diagnosis.
 
 ---
 
-## 🚀 How to Run
+## Run it on your own Windows PC with VS Code
 
-### What you need
-- **Python 3.10 – 3.13**: check with `python --version`
-- **Node.js 20 or newer**: check with `node --version`
+This guide assumes you have never run a project like this before. Follow it top to bottom. Every step says exactly what to click and type.
 
-You will run **two terminals**: one for the backend (the AI models) and one for the frontend (the website). Keep both open while you use the app.
+**How it works, in one picture.** The project has two parts, and each one runs in its **own terminal window**:
 
-### Step 1: Backend (Terminal 1)
-Open a terminal in the project folder and run these commands, depending on your system:
+| Part | What it does | Terminal | Address |
+| :--- | :--- | :--- | :--- |
+| **Backend** (Python) | Runs the AI models | **Terminal 1** | http://127.0.0.1:8000 |
+| **Frontend** (website) | The page you see and click | **Terminal 2** | http://localhost:5173 |
 
-**Windows (PowerShell or CMD)**
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-python backend/main.py
-```
+You must keep **both terminals open** while you use the app.
 
-**macOS / Linux**
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python backend/main.py
-```
+---
 
-✅ **It's working when** you see `SUCCESS: All Deep Learning MLP models, scalers, and loss histories loaded`. The server runs at http://127.0.0.1:8000.
+### Step 0: Install the tools (one time only)
 
-> If PowerShell blocks `activate`, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, then try again.
+Skip any tool you already have. To check, you can do Step 3 and come back if a command is not recognised.
 
-### Step 2: Frontend (Terminal 2)
-Open a **second** terminal in the project folder and run:
+1. **Visual Studio Code**: download from https://code.visualstudio.com and install it.
+2. **Python 3.10 to 3.13**: download from https://www.python.org/downloads/windows/ and run the installer.
+   - **Important:** on the first installer screen, tick **"Add python.exe to PATH"** *before* you click Install Now. If you forget this, `python` will not work later.
+3. **Node.js (LTS version)**: download the **LTS** button from https://nodejs.org and install it with the default options.
+4. **Git** (optional): from https://git-scm.com/download/win. You only need this if you want to *clone* the project. You can download a ZIP instead (Step 1).
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+After installing, **restart your computer** once so Windows picks everything up.
 
-✅ **It's working when** a link appears: http://localhost:5173. Open it in your browser.
+---
 
-### Running it again later
-You only need to install things once. After that:
+### Step 1: Get the project onto your PC
 
-| Terminal 1 (backend) | Terminal 2 (frontend) |
-| :--- | :--- |
-| `.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (macOS/Linux) | `cd frontend` |
-| `python backend/main.py` | `npm run dev` |
+Pick **one** of the two ways.
 
-To stop either one, press `Ctrl + C` in its terminal.
+**Option A: Download a ZIP (no Git needed)**
+1. Open https://github.com/Butcherboy7/adaptive-gamer-coach in your browser.
+2. Click the green **Code** button, then **Download ZIP**.
+3. Right-click the downloaded ZIP, choose **Extract All...**, and extract it somewhere easy, for example your Desktop.
+4. You now have a folder called `adaptive-gamer-coach-main` (or similar). This is your project folder.
 
-### Common problems
+**Option B: Clone with Git**
+1. Open **Command Prompt** (press the Windows key, type `cmd`, press Enter).
+2. Run:
+   ```
+   cd Desktop
+   git clone https://github.com/Butcherboy7/adaptive-gamer-coach.git
+   ```
+3. You now have a `adaptive-gamer-coach` folder on your Desktop.
+
+---
+
+### Step 2: Open the project in VS Code
+
+1. Open **VS Code**.
+2. Click **File** (top left), then **Open Folder...**
+3. Select the project folder you made in Step 1 (the one that contains `README.md`, `backend`, `frontend` and `ml`), then click **Select Folder**.
+4. If VS Code asks *"Do you trust the authors of the files in this folder?"*, click **Yes, I trust the authors**.
+
+You should now see `backend`, `frontend`, `ml` and `README.md` in the left sidebar.
+
+---
+
+### Step 3: Open Terminal 1 and start the backend
+
+1. In VS Code, click **Terminal** in the top menu, then **New Terminal**.
+   A panel opens at the bottom. This is **Terminal 1**.
+2. Look at the top-right of that panel. It should say **powershell**. If it says something else, click the small arrow next to the **+** and choose **PowerShell**.
+3. Check the terminal is in the project folder. The line should end with your project folder name, like `...daptive-gamer-coach>`. If not, run `cd` followed by the folder path.
+4. Check Python is installed. Type this and press Enter:
+   ```
+   python --version
+   ```
+   You should see something like `Python 3.13.3`. If you see *"python is not recognized"*, go to the **Troubleshooting** table below.
+5. Create a private Python environment for the project (only the first time):
+   ```
+   python -m venv .venv
+   ```
+6. Switch it on:
+   ```
+   .venv\Scripts\activate
+   ```
+   You should now see `(.venv)` at the start of the line.
+   - **If it says "running scripts is disabled on this system":** run this once, then run the activate line again:
+     ```
+     Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+     ```
+     Type `Y` and press Enter if it asks.
+   - If VS Code pops up *"We noticed a new environment has been created. Do you want to select it?"*, click **Yes**.
+7. Install what the backend needs (only the first time, takes about a minute):
+   ```
+   pip install -r requirements.txt
+   ```
+8. Start the backend:
+   ```
+   python backend/main.py
+   ```
+
+**It's working when** you see `Application startup complete.` and `Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)`. (`0.0.0.0` just means "this computer"; you will use `127.0.0.1` or `localhost` in the browser.)
+
+> **Do not close this terminal and do not type in it again.** It is busy running the backend. Leave it alone and go to Step 4.
+
+---
+
+### Step 4: Open a NEW terminal (Terminal 2) and start the website
+
+The first terminal is now busy, so you need a second one.
+
+1. In VS Code, click **Terminal**, then **New Terminal** again. (Or click the **+** icon at the top-right of the terminal panel.)
+   A second terminal tab appears. This is **Terminal 2**. You can switch between the two using the list on the right side of the panel.
+2. Make sure Terminal 2 is also **PowerShell** and is in the project folder.
+3. Go into the frontend folder:
+   ```
+   cd frontend
+   ```
+4. Install what the website needs (only the first time, takes one to three minutes):
+   ```
+   npm install
+   ```
+   Warnings in yellow are normal. Red `ERR!` lines are not (see Troubleshooting).
+5. Start the website:
+   ```
+   npm run dev
+   ```
+
+**It's working when** you see a box with `Local: http://localhost:5173/`. If 5173 is busy, Vite picks the next free number (5174, 5175...). Always use the address it prints.
+
+---
+
+### Step 5: Open the app
+
+Hold **Ctrl** and click the `http://localhost:5173/` link in Terminal 2, or open your browser (Chrome, Edge or Brave) and type `localhost:5173` in the address bar.
+
+In the top-right of the page you should see a green dot and **Models online**. If it says **Server offline**, the backend in Terminal 1 is not running (see Troubleshooting).
+
+---
+
+### Running it again another day
+
+You only install things once. Next time:
+
+1. Open VS Code, then **File > Open Folder...** and choose the project folder again.
+2. **Terminal 1** (Terminal > New Terminal):
+   ```
+   .venv\Scripts\activate
+   python backend/main.py
+   ```
+3. **Terminal 2** (Terminal > New Terminal again):
+   ```
+   cd frontend
+   npm run dev
+   ```
+4. Open http://localhost:5173.
+
+### Stopping the app
+
+Click inside a terminal and press **Ctrl + C**. Do this in both terminals. You can then close VS Code.
+
+---
+
+## Using the app
+
+When the page opens you see three steps: pick a player, move the sliders, get the plan.
+
+**Option A: Pick a player**
+1. Click the big search box, or click one of the example players. You can also type a Riot ID such as `kyuu#0711` and press Enter. Press `/` anywhere to jump to the search.
+2. The player's profile appears on the left: rank, K/D, headshot rate, win rate, favourite agents, last 10 matches and what time of day they play.
+3. The report appears on the right. Read it top to bottom:
+   - **The headline and the dark "Do this first" bar** tell you the one thing to do right now.
+   - **Anger risk** and **Gaming addiction** are the two scores. The solid marker is where the player is now. The hollow marker is where they would land if they follow the plan.
+   - **What's pushing your risk up** lists the biggest problems. Each row has one scale: the green zone is healthy and the dot is you. Click a row for why it matters and how to fix it.
+   - **Your plan** has Today, Weeks 1 to 2 and Weeks 3 to 6. Click any step to see the details.
+   - **Warning signs** and **Talk to someone** show free help resources.
+4. Drag any slider on the left under **Try changing a habit** and the whole report updates live. This shows how a change would help.
+
+**Option B: Type your own numbers**
+1. On the start page, click **Or type your own numbers**.
+2. Answer six quick questions by moving each slider: hours played a day, late-night play, stress, anger after a loss, happiness and loneliness. Sliders with a hollow dot have not been answered yet.
+3. The **Your result so far** box on the right runs the real models as you move the sliders.
+4. Click **See my report**. The other 8 inputs are estimated from your answers or left at typical values, and are tagged **Estimated** or **Typical** so nothing is hidden. You can change any of them on the report page.
+
+> Player profiles come from a synthetic dataset. They are not real people.
+
+---
+
+## Deploy it on Vercel (free)
+
+The repo is already set up for Vercel (`vercel.json` and the `api/` folder). You change nothing.
+
+1. Push the project to your GitHub repo (`git add .`, `git commit -m "update"`, `git push`).
+2. Go to https://vercel.com, sign in with GitHub, click **Add New... > Project**, and **Import** `adaptive-gamer-coach`.
+3. Leave every setting on its default. Do not set a Root Directory. The build and output settings are read from `vercel.json`.
+4. Click **Deploy** and wait about a minute or two.
+5. When it says **Congratulations**, click the preview. The page should open with the intro animation and show **Models online** top-right.
+
+If **Models online** does not appear, open the Vercel project, go to **Logs**, and check the `/api` function.
+
+---
+
+## Troubleshooting
+
 | Problem | Fix |
 | :--- | :--- |
-| Website says *"Can't reach the analysis server"* | The backend isn't running. Start Step 1 in its own terminal. |
-| A model loading error | Make sure `ml/mlp_weights.json` exists. If you retrained, run `python export_weights.py` in `ml/`. |
-| `'python' is not recognized` | Install Python from python.org and tick **"Add Python to PATH"**. On macOS/Linux use `python3`. |
-| `npm` is not recognized | Install Node.js (LTS) from nodejs.org, then reopen the terminal. |
-| Port 8000 or 5173 is already in use | Close the other terminal that is already running it, or restart your computer. |
+| `python` is not recognized | Python is not installed or was installed without "Add to PATH". Reinstall it from python.org and tick **Add python.exe to PATH**, then close and reopen VS Code. You can also try `py --version` and use `py` instead of `python` in the commands. |
+| `npm` is not recognized | Install Node.js (LTS) from nodejs.org, restart your PC, then reopen VS Code. |
+| "running scripts is disabled on this system" when activating | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, type `Y`, then run `.venv\Scripts\activate` again. |
+| Page says **Server offline** or "Can't reach the analysis server" | The backend is not running. Go to Terminal 1 and run `python backend/main.py` (with `(.venv)` showing). |
+| You typed the website commands in Terminal 1 and nothing works | Terminal 1 is busy running the backend. Open a **new** terminal (Terminal > New Terminal) for the website. |
+| `Could not open requirements file` | You are in the wrong folder. The terminal must be in the project folder that contains `requirements.txt`. Use `cd` to go there. |
+| `ENOENT ... package.json` when running `npm` | You forgot `cd frontend`. Run it first. |
+| Port 8000 or 5173 is already in use | Another copy is still running. Press Ctrl+C in the old terminals, or close VS Code and reopen it. If it persists, restart your PC. |
+| A model loading error in Terminal 1 | Check that `ml/mlp_weights.json` exists. If you retrained the models, run `python export_weights.py` inside the `ml` folder. |
+| Python or npm installs fail on a college or office network | Try a different network or a phone hotspot. Some networks block package downloads. |
 
 ---
 
-## 🎮 How to use the Dashboard
-
-1. **Search a Riot ID** in the top bar (press `/` to jump to it). Try `kyuu#0711`, `sleepy jett#zzz`, `tilted tom#lol` or `별빛#KR1`. The player database has 144 Valorant players across NA, EU, AP, KR, BR and LATAM; any other Riot ID gets a stable generated profile.
-2. The **player card** shows rank, K/D, HS%, ACS, win rate, agents, the last 10 matches (surrenders flagged) and when they play by hour.
-3. The **report** runs automatically and updates live as you drag any slider:
-   - **Verdict**: one plain-English sentence, the explanation, and the first thing to do.
-   - **Scores**: tilt (rage-quit) probability and addiction level, with the model's confidence per level.
-   - **What's driving your score**: every factor against its healthy range, plus how many points it adds to tilt and to addiction (Shapley values from the real models). Open a factor for why it matters and how to fix it.
-   - **Recovery plan**: Today / Weeks 1–2 / Weeks 3–6, and a week-by-week step-down schedule for daily play.
-   - **If you follow the plan**: the same models re-run on the plan's targets, so you can see the predicted improvement.
-   - **Warning signs & support**: WHO gaming-disorder overlap (not a diagnosis) and free helplines.
-4. No Riot ID? Choose **Or enter your own numbers** on the start screen.
-5. Deep link straight to a player: `http://localhost:5173/?player=kyuu%230711`.
-
-> All player profiles come from a synthetic dataset, not real accounts.
-
----
-
-## 🛠️ Deep Learning Architecture & Neural Network Details
+## How it works
 
 ```
-                               ┌───────────────────┐
-                               │   Vite + React    │  (Port 5173)
-                               │ (Broadcast HUD)   │
-                               └─────────┬─────────┘
-                                         │  POST /predict
-                                         ▼
-                               ┌───────────────────┐
-                               │  FastAPI Backend  │  (Port 8000)
-                               └─────────┬─────────┘
-                                         │  Inference
-                                         ▼
-                             ┌──────────────────────┐
-                             │ Deep Neural Network  │  (Multi-Layer Perceptron)
-                             │   Pickled Models     │  Dense-128 -> ReLU -> Dense-64
-                             └──────────────────────┘
+                  ┌───────────────────┐
+                  │   Vite + React    │   (port 5173)
+                  │    the website    │
+                  └─────────┬─────────┘
+                            │  POST /predict
+                            ▼
+                  ┌───────────────────┐
+                  │  FastAPI backend  │   (port 8000)
+                  └─────────┬─────────┘
+                            │  inference
+                            ▼
+                ┌────────────────────────┐
+                │ Two neural networks    │
+                │ (multi-layer           │
+                │  perceptrons)          │
+                └────────────────────────┘
 ```
 
-### Models (Multi-Layer Perceptrons, scikit-learn)
-Both models are trained by `ml/train_deep_learning.py` on 22,000 synthetic, population-shaped player profiles (80/20 train/test split). See *How the models run* below to retrain.
+### The models
+Both are trained by `ml/train_deep_learning.py` on 22,000 synthetic, population-shaped player profiles (80/20 train/test split).
 
-- **Tilt / rage-quit model**: 9 inputs (stress, anxiety, anger after losses, daily hours, toxic lobbies, late-night play, sessions, sleep, loneliness) → Dense-128 → Dense-64 → probability. Labels are sampled from a documented risk function in the training script, so every input has a real effect. Test accuracy 79.7%, ROC-AUC 0.86 (the noisy labels cap any model at about 79%).
-- **Addiction model**: 10 inputs (daily hours, sessions, late-night play, sleep, loneliness, offline social life, spending, years playing, happiness, low mood) → Dense-128 → Dense-64 → Low / Medium / High. Test accuracy 92.6%, macro-F1 0.91.
-- **Factor impacts**: sampled Shapley values against a healthy baseline profile (`backend/coaching.py`). Each factor's points are its average contribution to the model output across random orderings, and they sum to the gap between the player and the healthy baseline.
-- **Coaching engine**: `backend/coaching.py` writes the verdict, per-factor advice, phased plan, step-down schedule and projected outcome from the player's own numbers.
-- **Player database**: `backend/players.py` generates each player from a behavioural archetype, so Valorant stats, match history and wellbeing answers stay consistent.
+- **Anger (rage-quit) model**: 9 inputs (stress, anxiety, anger after losses, daily hours, toxic lobbies, late-night play, sessions, sleep, loneliness) leading to a probability. Test accuracy 79.7%, ROC-AUC 0.86. The labels are noisy by design, which caps any model at about 79%.
+- **Addiction model**: 10 inputs (daily hours, sessions, late-night play, sleep, loneliness, offline social life, spending, years playing, happiness, low mood) leading to Low, Medium or High. Test accuracy 92.6%, macro-F1 0.91.
+- **Factor impacts**: sampled Shapley values against a healthy baseline profile (`backend/coaching.py`). Each factor's points are its average effect on the model output across random orderings of the factors.
+- **Coaching engine**: `backend/coaching.py` writes the headline, per-factor advice, phased plan, step-down schedule and the projected outcome from the player's own numbers.
+- **Player database**: `backend/players.py` generates each player from a behavioural archetype, so the stats, match history and wellbeing answers stay consistent.
+
+### About the "Estimated" inputs
+In the quick form, some inputs are estimated from related answers (for example sleep from late-night play, anxiety from stress). These shortcuts are assumptions made by the app. The models were trained on data where every input varies independently, so they did not learn these links. This is why those values are always labelled **Estimated** and can be edited.
 
 ### API
 | Endpoint | Purpose |
@@ -121,27 +260,36 @@ Both models are trained by `ml/train_deep_learning.py` on 22,000 synthetic, popu
 | `GET /health` | Model status |
 | `GET /players/search?q=` | Search players by Riot ID |
 | `GET /players/lookup?riot_id=` | Full player profile |
-| `POST /predict` | Predictions, attributions, plan and projection |
+| `POST /predict` | Predictions, factor impacts, plan and projection |
 
----
-
-## ⚙️ How the models run
-The models are trained with scikit-learn, then exported to `ml/mlp_weights.json` and run by the API with plain NumPy (`backend/mlp.py`, which gives exactly the same predictions). The server therefore doesn't need scikit-learn, which keeps the Vercel function well under its size limit.
-
-To retrain (optional):
-```bash
+### Retraining the models (optional)
+The models run from `ml/mlp_weights.json` using plain NumPy (`backend/mlp.py`), so the server does not need scikit-learn. To retrain, open a terminal in the project folder, activate `.venv`, then:
+```
 pip install -r ml/requirements.txt
 cd ml
 python train_deep_learning.py
 ```
-This uses the pinned `scikit-learn==1.5.2` and re-exports `mlp_weights.json` automatically.
+This re-exports `mlp_weights.json` automatically.
 
 ---
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Project layout
 
-## 🎓 Academic Attribution
-- **Course**: Mallareddy University, Department of CSE - Review 3
+| Folder | What is in it |
+| :--- | :--- |
+| `backend/` | FastAPI server, coaching engine, player database, NumPy model runner |
+| `frontend/` | The React website (Vite) |
+| `ml/` | Model training scripts and the trained weights |
+| `api/` | Entry point for deploying the backend on Vercel |
+| `vercel.json` | Vercel build and routing settings (do not delete) |
+| `docs/` | Extra project notes |
+
+---
+
+## License
+MIT. See [LICENSE](LICENSE).
+
+## Academic attribution
+- **Course**: Mallareddy University, Department of CSE, Review 3
 - **Research**: Predicting Gamer Burnout via Behavioral Modeling
-- **Lead Developer**: Abdullah
+- **Lead developer**: Abdullah

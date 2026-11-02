@@ -31,3 +31,5 @@ ml/*.csv
 .vscode/
 .idea/
 *.swp
+vicky-ref/
+_original-animations/
