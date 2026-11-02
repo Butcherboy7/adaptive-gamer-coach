@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, ArrowRight, SlidersHorizontal, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, Home, Search, SlidersHorizontal, X } from 'lucide-react';
 import { api } from './api';
 import { useEnterDelay, useReveal } from './motion';
 import Intro from './components/Intro';
@@ -51,6 +51,12 @@ function Report({ result }) {
   );
 }
 
+const STATUS_TIP = {
+  checking: 'Contacting the analysis server',
+  online: 'The analysis server and both models are running',
+  degraded: 'The server is up but the models did not load',
+  offline: 'Cannot reach the analysis server. Is the backend running?',
+};
 const STATUS_LABEL = { checking: 'Connecting…', online: 'Models online', degraded: 'Models not loaded', offline: 'Server offline' };
 
 function EmptyReport({ onPick, onSearch, loading, onManual }) {
@@ -60,7 +66,7 @@ function EmptyReport({ onPick, onSearch, loading, onManual }) {
   return (
     <section className="empty" aria-labelledby="empty-title" style={{ '--enter': `${enter}s` }}>
       <h2 id="empty-title" className="empty-title">
-        <span className="mask-line"><span style={{ '--d': '0ms' }}>Check a player's</span></span>
+        <span className="mask-line"><span style={{ '--d': '0ms' }}>Check a player's</span></span>{' '}
         <span className="mask-line"><span style={{ '--d': '110ms' }}>anger and gaming habits</span></span>
       </h2>
       <div className="flow">
@@ -148,6 +154,34 @@ export default function App() {
 
   const startManual = () => { setPlayer(null); setManual(true); };
 
+  // Back to the opening screen: clears the report, the numbers and any ?player= link.
+  const goHome = useCallback(() => {
+    setPlayer(null);
+    setBaseValues(DEFAULT_VALUES);
+    setValues(DEFAULT_VALUES);
+    setTags({});
+    setBaseTags({});
+    setResult(null);
+    setManual(false);
+    setStarted(false);
+    setError(null);
+    try { window.history.replaceState(null, '', window.location.pathname); } catch { /* ignore */ }
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  const startManualFromReport = () => {
+    setStarted(false);
+    setResult(null);
+    setPlayer(null);
+    setManual(true);
+    window.scrollTo({ top: 0 });
+  };
+
+  const focusSearch = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('.topbar input[role="combobox"]')?.focus();
+  };
+
   const finishManual = (vals, t) => {
     setPlayer(null);
     setBaseValues(vals);
@@ -194,7 +228,7 @@ export default function App() {
     <div className="app" style={{ '--enter': `${enter}s` }}>
       <Intro />
       <header className="topbar enter-down">
-        <a className="wordmark" href="/" aria-label="Adaptive Gamer Coach home">
+        <a className="wordmark" href="/" aria-label="Adaptive Gamer Coach, back to the start" data-tip="Back to the start" data-tip-pos="bottom" onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); goHome(); }}>
           <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden>
             <path className="wm-line" d="M4 26 L16 4 L28 26 Z" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" pathLength="1" />
             <path className="wm-wedge" d="M10 26 L16 15 L22 26" fill="var(--red)" />
@@ -202,9 +236,16 @@ export default function App() {
           <span className="wordmark-text">Adaptive Gamer <b>Coach</b></span>
         </a>
         {started ? <PlayerSearch onSelect={selectPlayer} loading={lookingUp} /> : <span />}
-        <span className={`api-status is-${apiStatus}`} role="status">
-          <i aria-hidden /> {STATUS_LABEL[apiStatus]}
-        </span>
+        <div className="top-actions">
+          {(started || manual) && (
+            <button type="button" className="btn-quiet btn-home" onClick={goHome} data-tip="Go back to the start screen" data-tip-pos="bottom">
+              <Home size={15} aria-hidden /> Home
+            </button>
+          )}
+          <span className={`api-status is-${apiStatus}`} role="status" tabIndex={0} data-tip={STATUS_TIP[apiStatus]} data-tip-pos="bottom-end">
+            <i aria-hidden /> {STATUS_LABEL[apiStatus]}
+          </span>
+        </div>
       </header>
 
       {error && (
@@ -233,6 +274,22 @@ export default function App() {
         )}
 
         <div className={`report ${analyzing && result ? 'is-updating' : ''}`} aria-live="polite" aria-busy={analyzing}>
+          {started && (
+            <nav className="crumbs" aria-label="Where you are">
+              <button type="button" className="crumb-back" onClick={goHome} data-tip="Back to the start screen">
+                <ArrowLeft size={15} aria-hidden /> Back to start
+              </button>
+              <span className="crumb-sep" aria-hidden>/</span>
+              <span className="crumb-here" aria-current="page">{subject}</span>
+              <span className="crumb-spacer" />
+              <button type="button" className="crumb-act" onClick={focusSearch} data-tip="Search for a different player">
+                <Search size={14} aria-hidden /> Another player
+              </button>
+              <button type="button" className="crumb-act" onClick={startManualFromReport} data-tip="Answer six quick questions about yourself">
+                <SlidersHorizontal size={14} aria-hidden /> Type my own numbers
+              </button>
+            </nav>
+          )}
           {!started || !result ? (
             started ? (
               <div className="report-loading" role="status">

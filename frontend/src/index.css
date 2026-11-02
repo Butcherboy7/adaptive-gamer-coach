@@ -1142,6 +1142,65 @@ body { font-variation-settings: 'wdth' 100; caret-color: var(--red); }
   .intro-tag { --tag-ls: 0.1em; font-size: 11px; letter-spacing: var(--tag-ls); }
 }
 
+/* ── Navigation and tooltips ── */
+.top-actions { display: flex; align-items: center; gap: 14px; justify-self: end; }
+.btn-home { padding: 6px 12px; color: var(--bone); border-color: var(--line-2); }
+.wordmark { cursor: pointer; }
+.wordmark:hover .wordmark-text { color: var(--bone); }
+.api-status { cursor: help; }
+
+.crumbs {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px;
+  margin-bottom: 14px;
+  font-size: 14px; color: var(--ink-3);
+}
+.crumb-back, .crumb-act {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--line-2); border-radius: var(--radius-sm);
+  background: var(--sheet); color: var(--ink-2);
+  font-size: 13.5px; font-weight: 600;
+  transition: background-color 140ms, border-color 140ms, color 140ms;
+}
+.crumb-back { color: var(--bone); }
+.crumb-back:hover, .crumb-act:hover { background: var(--sheet-3); color: var(--ink); border-color: var(--ink-3); }
+.crumb-here { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+.crumb-spacer { flex: 1; }
+
+/* Tooltip: put data-tip="text" on any element. data-tip-pos moves it. */
+:where([data-tip]) { position: relative; }
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute; z-index: 60;
+  bottom: calc(100% + 8px); left: 50%;
+  width: max-content; max-width: 260px;
+  padding: 6px 10px;
+  background: var(--bone); color: var(--bone-ink);
+  font-family: var(--ui); font-size: 12.5px; font-weight: 500; line-height: 1.4;
+  letter-spacing: 0; text-transform: none; text-align: left; white-space: normal;
+  border-radius: 2px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  opacity: 0; transform: translate(-50%, 4px);
+  pointer-events: none;
+  transition: opacity 120ms, transform 120ms;
+}
+[data-tip-pos="bottom"]::after { bottom: auto; top: calc(100% + 8px); transform: translate(-50%, -4px); }
+[data-tip-pos="bottom-end"]::after { bottom: auto; top: calc(100% + 8px); left: auto; right: 0; transform: translateY(-4px); }
+[data-tip-pos="top-start"]::after { left: 0; transform: translateY(4px); }
+[data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1; transform: translate(-50%, 0); transition-delay: 350ms; }
+[data-tip-pos="bottom-end"]:hover::after, [data-tip-pos="bottom-end"]:focus-visible::after,
+[data-tip-pos="top-start"]:hover::after, [data-tip-pos="top-start"]:focus-visible::after { transform: none; }
+@media (hover: none) { [data-tip]:hover::after { opacity: 0; } [data-tip]:focus-visible::after { opacity: 1; } }
+
+@media (max-width: 960px) {
+  .top-actions { gap: 10px; }
+  .crumb-spacer { display: none; }
+}
+@media (max-width: 560px) {
+  .btn-home { padding: 6px 9px; }
+  .api-status { font-size: 12px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .intro { display: none; }
   .reveal { opacity: 1; transform: none; }

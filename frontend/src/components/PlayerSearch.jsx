@@ -73,7 +73,7 @@ export default function PlayerSearch({ onSelect, loading, large = false, autoFoc
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
         />
-        <kbd className="search-kbd" aria-hidden>/</kbd>
+        <kbd className="search-kbd" aria-hidden data-tip="Press / anywhere to search">/</kbd>
       </div>
 
       {open && options.length > 0 && (

@@ -17,8 +17,8 @@ function BandMeter({ value, after }) {
         <span className="band band-ok" style={{ width: `${widths[0] * 100}%`, '--i': 0 }} />
         <span className="band band-watch" style={{ width: `${widths[1] * 100}%`, '--i': 1 }} />
         <span className="band band-risk" style={{ width: `${widths[2] * 100}%`, '--i': 2 }} />
-        {after != null && <span className="band-pin band-ghost" style={{ left: at(after) }} />}
-        <span className="band-pin" style={{ left: at(value) }} />
+        {after != null && <span className="band-pin band-ghost" style={{ left: at(after) }} data-tip={`After the plan: about ${Math.round(after * 100)}%`} />}
+        <span className="band-pin" style={{ left: at(value) }} data-tip={`Now: ${Math.round(value * 100)}%`} />
       </div>
       <div className="band-labels" aria-hidden>
         {LEVELS.map((n, i) => <span key={n} style={{ width: `${widths[i] * 100}%` }}>{n}</span>)}
@@ -32,7 +32,7 @@ function LevelBar({ current, after, probs }) {
   return (
     <div className="level-bar" role="img" aria-label={`Addiction level ${current}${after ? `, ${after} after the plan` : ''}`}>
       {LEVELS.map((l, i) => (
-        <span key={l} style={{ '--i': i }} className={`level level-${tone(l)} ${l === current ? 'is-now' : ''} ${l === after ? 'is-after' : ''}`}>
+        <span key={l} style={{ '--i': i }} title={`${l}: the model gives ${Math.round((probs[l] || 0) * 100)}% chance${l === current ? ' (its pick)' : ''}`} className={`level level-${tone(l)} ${l === current ? 'is-now' : ''} ${l === after ? 'is-after' : ''}`}>
           <b>{l}</b>
           <small className="num">{Math.round((probs[l] || 0) * 100)}%</small>
         </span>
@@ -44,8 +44,8 @@ function LevelBar({ current, after, probs }) {
 function Legend({ afterLabel }) {
   return (
     <p className="legend-line">
-      <span><i className="mk mk-now" /> Now</span>
-      <span><i className="mk mk-after" /> After plan <b className="num">{afterLabel}</b></span>
+      <span data-tip="Where you are today"><i className="mk mk-now" /> Now</span>
+      <span data-tip="Where the model expects you to land if you follow the plan"><i className="mk mk-after" /> After plan <b className="num">{afterLabel}</b></span>
     </p>
   );
 }
@@ -78,7 +78,7 @@ export default function Summary({ data }) {
         <section className={`plate score tone-${tone(tiltLevel)}`} aria-label="Anger risk">
           <h3 className="score-title">
             <Flame size={16} aria-hidden /> Anger risk
-            <Info size={14} className="score-info" aria-label="Chance you lose your temper and quit after a bad game" role="img"><title>Chance you lose your temper and quit after a bad game</title></Info>
+            <span className="score-info" tabIndex={0} role="img" aria-label="Chance you lose your temper and quit after a bad game" data-tip="Chance you lose your temper and quit after a bad game"><Info size={14} aria-hidden /></span>
           </h3>
           <div className="score-figure">
             <span className="score-value num">{tiltPct}<small>%</small></span>
@@ -91,7 +91,7 @@ export default function Summary({ data }) {
         <section className={`plate score tone-${tone(addLevel)}`} aria-label="Gaming addiction level">
           <h3 className="score-title">
             <Gamepad2 size={16} aria-hidden /> Gaming addiction
-            <Info size={14} className="score-info" aria-label="How much gaming is crowding out sleep, people and other plans" role="img"><title>How much gaming is crowding out sleep, people and other plans</title></Info>
+            <span className="score-info" tabIndex={0} role="img" aria-label="How much gaming is crowding out sleep, people and other plans" data-tip="How much gaming is crowding out sleep, people and other plans"><Info size={14} aria-hidden /></span>
           </h3>
           <div className="score-figure">
             <span className="score-value score-word">{addLevel}</span>

@@ -83,7 +83,7 @@ export default function InputsPanel({ values, onChange, onReset, dirty, hasPlaye
       <header className="inputs-head">
         <h2 id="inputs-title">{hasPlayer ? 'Try changing a habit' : 'Your numbers'}</h2>
         {dirty && (
-          <button type="button" className="btn-quiet" onClick={onReset}>
+          <button type="button" className="btn-quiet" onClick={onReset} data-tip={hasPlayer ? "Put every slider back to this player's real numbers" : "Put every slider back to your answers"} data-tip-pos="bottom-end">
             <RotateCcw size={14} aria-hidden /> Reset
           </button>
         )}

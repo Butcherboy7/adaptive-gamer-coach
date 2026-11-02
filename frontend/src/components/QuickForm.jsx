@@ -46,7 +46,7 @@ function Question({ item, value, touched, onChange }) {
         </span>
       </div>
       <div className="qf-track">
-        <span className="qf-zone" style={{ left: `${pct(lo)}%`, width: `${pct(hi) - pct(lo)}%` }}><em>healthy</em></span>
+        <span className="qf-zone" data-tip="The healthy range" style={{ left: `${pct(lo)}%`, width: `${pct(hi) - pct(lo)}%` }}><em>healthy</em></span>
         <input
           id={`qf-${item.id}`}
           type="range"
@@ -94,7 +94,7 @@ export default function QuickForm({ onDone, onBack }) {
   return (
     <section className="qf" aria-labelledby="qf-title">
       <div className="qf-main plate">
-        <button type="button" className="btn-quiet qf-back" onClick={onBack}><ArrowLeft size={15} aria-hidden /> Pick a player instead</button>
+        <button type="button" className="btn-quiet qf-back" onClick={onBack} data-tip="Go back and search for a player"><ArrowLeft size={15} aria-hidden /> Pick a player instead</button>
         <h2 id="qf-title" className="qf-title">Tell us about a normal week</h2>
         <p className="qf-sub">Move each slider to where you are. Leave any you are unsure about.</p>
 
@@ -130,7 +130,7 @@ export default function QuickForm({ onDone, onBack }) {
 
         <div className="qf-nav">
           <span>Takes about a minute.</span>
-          <button type="button" className="qf-go" onClick={finish}>See my report</button>
+          <button type="button" className="qf-go" onClick={finish} data-tip="Run the full analysis with your answers">See my report</button>
         </div>
       </div>
 

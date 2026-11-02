@@ -22,7 +22,7 @@ function Impact({ d, max }) {
   const add = Math.max(0, d.addiction_impact);
   const top = Math.max(tilt, add);
   return (
-    <span className="impact">
+    <span className="impact" data-tip="How many risk points this adds. Longer bar = bigger effect">
       <span className="impact-line">
         <span className="impact-track"><span className="impact-fill" style={{ width: `${Math.min(100, (top / max) * 100)}%` }} /></span>
         <b className="num">{top >= 0.5 ? `+${top.toFixed(0)}` : '0'}</b>
@@ -39,7 +39,7 @@ function Row({ d, max, open, onToggle, index, extra }) {
   const Icon = FACTOR_ICONS[d.feature];
   return (
     <li className={`prob ${open ? 'is-open' : ''} ${extra ? 'is-extra' : ''}`} style={{ '--i': index }}>
-      <button type="button" className="prob-row" aria-expanded={open} onClick={onToggle}>
+      <button type="button" className="prob-row" aria-expanded={open} onClick={onToggle} data-tip={open ? 'Hide the details' : 'Click to see why it matters and how to fix it'} data-tip-pos="top-start">
         <span className="prob-name">
           <span className={`prob-ico status-${d.status}`}>{Icon && <Icon size={18} aria-hidden />}</span>
           <span>
@@ -79,8 +79,8 @@ export default function Problems({ drivers }) {
       <header className="section-head">
         <h2 id="problems-title">What's pushing your risk up</h2>
         <p className="prob-legend" aria-hidden>
-          <span><i className="lg-zone" /> Healthy zone</span>
-          <span><i className="lg-pin" /> You</span>
+          <span data-tip="The range doctors and coaches call healthy"><i className="lg-zone" /> Healthy zone</span>
+          <span data-tip="Where your number sits on the scale"><i className="lg-pin" /> You</span>
           <span>Longer bar = bigger effect</span>
         </p>
       </header>
@@ -107,7 +107,7 @@ export default function Problems({ drivers }) {
           <ul>
             {healthy.map((d) => {
               const Icon = FACTOR_ICONS[d.feature];
-              return <li key={d.feature} title={`${d.label}: ${d.display_value}`}>{Icon && <Icon size={14} aria-hidden />}{d.label}</li>;
+              return <li key={d.feature} data-tip={`${d.label}: ${d.display_value}, in the healthy range`}>{Icon && <Icon size={14} aria-hidden />}{d.label}</li>;
             })}
           </ul>
         </div>
